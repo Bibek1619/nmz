@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import Image from 'next/image'
 import { useState } from 'react'
 import { X } from 'lucide-react'
+import { Navigation } from '@/components/navigation'
 
 const galleryImages = [
   {
@@ -55,12 +56,7 @@ export default function GalleryPage() {
 
   return (
     <main className="w-full overflow-hidden">
-      {/* Navigation */}
-      <nav className="fixed top-0 w-full z-40 bg-background/80 backdrop-blur-md border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <a href="/" className="text-2xl font-bold text-primary">Trek Adventures</a>
-        </div>
-      </nav>
+      <Navigation />
 
       {/* Hero Section */}
       <section className="pt-32 pb-12 px-4 text-center bg-gradient-to-b from-primary/5 to-background">

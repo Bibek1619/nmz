@@ -34,8 +34,8 @@ export function Navigation() {
             animate={{ opacity: 1, x: 0 }}
             className="flex-shrink-0"
           >
-            <Link href="/" className="text-xl font-bold">
-              <span className="bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent">
+            <Link href="/" className="text-xl font-bold tracking-wide">
+              <span className="logo-gradient">
                 NMZ RAHUL
               </span>
             </Link>
