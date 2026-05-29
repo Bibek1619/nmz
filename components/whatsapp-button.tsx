@@ -24,7 +24,7 @@ export function WhatsAppButton() {
         transition={{ delay: 1, type: 'spring', stiffness: 260, damping: 20 }}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
-        className="fixed bottom-6 left-6 z-50 flex items-center gap-2 bg-[#25D366] hover:bg-[#20bb5a] text-white rounded-full shadow-lg shadow-[#25D366]/30 transition-colors group"
+        className="fixed bottom-6 left-6 z-50 hidden lg:flex items-center gap-2 bg-[#25D366] hover:bg-[#20bb5a] text-white rounded-full shadow-lg shadow-[#25D366]/30 transition-colors group"
         aria-label="Chat on WhatsApp"
       >
         {/* Icon circle */}
@@ -34,7 +34,7 @@ export function WhatsAppButton() {
           </svg>
         </div>
 
-        {/* Expandable label */}
+        {/* Expandable label - desktop only */}
         <span className="max-w-0 overflow-hidden whitespace-nowrap group-hover:max-w-xs transition-all duration-300 ease-in-out pr-0 group-hover:pr-4 text-sm font-semibold">
           Chat with us
         </span>

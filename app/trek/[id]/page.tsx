@@ -17,6 +17,7 @@ const treks = {
     distance: '39 km',
     price: '$1,200',
     image: '/trek-annapurna.jpg',
+    bestSeason: 'September - November, March - May',
     description: 'Experience the stunning Annapurna Base Camp trek, one of Nepal\'s most iconic mountain routes. Trek through lush forests, charming villages, and reach the breathtaking base camp surrounded by prayer flags and panoramic mountain views.',
     highlights: [
       'Visit the picturesque Annapurna Base Camp',
@@ -60,6 +61,7 @@ const treks = {
     distance: '30 km',
     price: '$900',
     image: '/trek-mardi.jpg',
+    bestSeason: 'October - November, March - April',
     description: 'The perfect beginner-friendly trek offering incredible mountain panoramas. Mardi Himal provides stunning views of Machhapuchare, Annapurna, and Dhaulagiri without the crowds of other popular routes.',
     highlights: [
       'Panoramic mountain views',
@@ -100,6 +102,7 @@ const treks = {
     distance: '130 km',
     price: '$2,500',
     image: '/trek-annapurna.jpg',
+    bestSeason: 'September - November, March - May',
     description: 'The ultimate trekking challenge. Trek to the base camp of the world\'s highest mountain, experiencing stunning Himalayan scenery, meeting Sherpa communities, and standing at the foot of Mount Everest.',
     highlights: [
       'Trek to Everest Base Camp (5,364m)',
@@ -202,7 +205,12 @@ export default function TrekDetail() {
               whileInView={{ opacity: 1, y: 0 }}
             >
               <h2 className="text-3xl font-bold text-primary mb-4">Overview</h2>
-              <p className="text-foreground/80 leading-relaxed text-lg">{trek.description}</p>
+              <p className="text-foreground/80 leading-relaxed text-lg mb-6">{trek.description}</p>
+              
+              <div className="bg-card/50 border border-border rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-primary mb-2">Best Season to Trek</h3>
+                <p className="text-foreground/80">{trek.bestSeason}</p>
+              </div>
             </motion.div>
 
             {/* Highlights */}

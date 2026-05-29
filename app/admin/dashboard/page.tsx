@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -14,8 +14,11 @@ import {
 } from '@/components/ui/sidebar'
 import {
   LayoutDashboard, Mountain, Image as ImageIcon, HelpCircle,
-  Phone, Star, User, Home, Save, ArrowLeft, TrendingUp,
+  Phone, Star, User, Home, Save, ArrowLeft, TrendingUp, Loader2,
 } from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
+import { TrekEditor } from '@/components/TrekEditor'
+import { GalleryManager } from '@/components/GalleryManager'
 
 const navItems = [
   { id: 'overview', label: 'Overview',     icon: LayoutDashboard },
@@ -28,11 +31,31 @@ const navItems = [
   { id: 'reviews',  label: 'Reviews',      icon: Star            },
 ]
 
-type TrekItem = { id: string; name: string; difficulty: string; days: string; price: string }
+type TrekItem = { 
+  id: string; 
+  name: string; 
+  subtext?: string;
+  difficulty: string; 
+  days: string; 
+  price: string;
+  image?: string;
+  description?: string;
+  bestSeason?: string;
+  height?: string;
+  distance?: string;
+  highlights?: string[];
+  itinerary?: { day: string; title: string; description: string }[];
+  included?: string[];
+  notIncluded?: string[];
+  featured?: boolean;
+}
 type FaqItem  = { id: number; question: string; answer: string }
 
 export default function AdminDashboard() {
+  const { toast } = useToast()
   const [activeSection, setActiveSection] = useState('overview')
+  const [loading, setLoading] = useState(false)
+  const [saving, setSaving] = useState(false)
 
   const [heroData, setHeroData] = useState({
     title:    'Conquer the Himalayas',
@@ -41,16 +64,138 @@ export default function AdminDashboard() {
   })
 
   const [aboutData, setAboutData] = useState({
-    title:       'Meet Your Guide',
-    description: "Hi, I'm NMZ RAHUL, a professional mountain trekking guide with over 10 years of experience.",
-    image:       '/profile.jpg',
+    name: '',
+    title: '',
+    bio: '',
+    profileImage: '',
+    mainPageImage: '',
+    stats: {
+      happyTrekkers: 0,
+      successfulTreks: 0,
+      yearsExperience: 0,
+      routes: 0,
+    },
+    email: '',
+    phone: '',
+    whatsapp: '',
+    socialLinks: {
+      facebook: '',
+      instagram: '',
+      twitter: '',
+    },
+    certifications: [] as string[],
+    languages: [] as string[],
+    specializations: [] as string[],
   })
 
+  // Fetch about data on mount
+  useEffect(() => {
+    if (activeSection === 'about') {
+      fetchAboutData()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSection])
+
+  const fetchAboutData = async () => {
+    setLoading(true)
+    try {
+      const response = await fetch('/api/admin/about')
+      if (!response.ok) throw new Error('Failed to fetch about data')
+      
+      const data = await response.json()
+      setAboutData({
+        name: data.name || '',
+        title: data.title || '',
+        bio: data.bio || '',
+        profileImage: data.profileImage || '',
+        mainPageImage: data.mainPageImage || '',
+        stats: data.stats || { happyTrekkers: 0, successfulTreks: 0, yearsExperience: 0, routes: 0 },
+        email: data.email || '',
+        phone: data.phone || '',
+        whatsapp: data.whatsapp || '',
+        socialLinks: data.socialLinks || { facebook: '', instagram: '', twitter: '' },
+        certifications: data.certifications || [],
+        languages: data.languages || [],
+        specializations: data.specializations || [],
+      })
+    } catch (error) {
+      console.error('Error fetching about data:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to load about data',
+        variant: 'destructive',
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const saveAboutData = async () => {
+    setSaving(true)
+    try {
+      const response = await fetch('/api/admin/about', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(aboutData),
+      })
+      
+      if (!response.ok) throw new Error('Failed to save about data')
+      
+      const result = await response.json()
+      toast({
+        title: 'Success',
+        description: 'About section updated successfully',
+      })
+    } catch (error) {
+      console.error('Error saving about data:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to save about data',
+        variant: 'destructive',
+      })
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const [trekData, setTrekData] = useState<TrekItem[]>([
-    { id: 'annapurna', name: 'Annapurna Base Camp', difficulty: 'Moderate', days: '7-8 days', price: '$1,200' },
-    { id: 'mardi',     name: 'Mardi Himal',         difficulty: 'Easy',     days: '5-6 days', price: '$900'   },
-    { id: 'everest',   name: 'Everest Base Camp',   difficulty: 'Hard',     days: '14 days',  price: '$2,500' },
+    { 
+      id: 'annapurna', 
+      name: 'Annapurna Base Camp', 
+      subtext: 'Surrounded by massive peaks',
+      difficulty: 'Moderate', 
+      days: '7-8 days', 
+      price: '$1,200',
+      image: '/trek-annapurna.jpg',
+      description: 'Trek to the stunning base camp with prayer flags and panoramic views',
+      bestSeason: 'September - November, March - May',
+      height: '4,130 m',
+      distance: '40 km',
+      highlights: ['Prayer flags at base camp', 'Rhododendron forests'],
+      itinerary: [{ day: '1', title: 'Arrival', description: 'Arrive at base' }],
+      included: ['Guide', 'Accommodation'],
+      notIncluded: ['Flights', 'Insurance'],
+      featured: true
+    },
+    { 
+      id: 'mardi', 
+      name: 'Mardi Himal', 
+      difficulty: 'Easy', 
+      days: '5-6 days', 
+      price: '$900',
+      featured: true
+    },
+    { 
+      id: 'everest', 
+      name: 'Everest Base Camp', 
+      difficulty: 'Hard', 
+      days: '14 days', 
+      price: '$2,500',
+      featured: false
+    },
   ])
+
+  const [editingTrekData, setEditingTrekData] = useState<TrekItem | null>(null)
 
   const [galleryData, setGalleryData] = useState([
     { id: 1, title: 'Mountain Sunrise', image: '/gallery-1.jpg' },
@@ -73,9 +218,7 @@ export default function AdminDashboard() {
     address:  'Thamel, Kathmandu',
   })
 
-  const [editingTrek, setEditingTrek] = useState<number | null>(null)
   const [editingFaq,  setEditingFaq]  = useState<number | null>(null)
-  const [newTrek, setNewTrek] = useState<Partial<TrekItem> | null>(null)
   const [newFaq,  setNewFaq]  = useState<Partial<FaqItem>  | null>(null)
 
   const currentNav = navItems.find(n => n.id === activeSection)
@@ -203,106 +346,347 @@ export default function AdminDashboard() {
           {/* About */}
           {activeSection === 'about' && (
             <div className="space-y-4">
-              <h2 className="text-2xl font-bold">About Section</h2>
-              <Card className="p-6 space-y-4">
-                <div>
-                  <label className="block text-sm font-semibold mb-1.5">Title</label>
-                  <Input value={aboutData.title} onChange={e => setAboutData({ ...aboutData, title: e.target.value })} />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold mb-1.5">Description</label>
-                  <Textarea rows={5} value={aboutData.description} onChange={e => setAboutData({ ...aboutData, description: e.target.value })} />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold mb-1.5">Profile Image Path</label>
-                  <Input value={aboutData.image} onChange={e => setAboutData({ ...aboutData, image: e.target.value })} />
-                </div>
-                <Button className="w-full gap-2"><Save size={16} />Save Changes</Button>
-              </Card>
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold">About Section</h2>
+                {loading && <Loader2 className="animate-spin text-muted-foreground" size={20} />}
+              </div>
+
+              {loading ? (
+                <Card className="p-6">
+                  <p className="text-center text-muted-foreground">Loading...</p>
+                </Card>
+              ) : (
+                <>
+                  {/* Personal Information */}
+                  <Card className="p-6 space-y-4">
+                    <h3 className="font-semibold text-lg">Personal Information</h3>
+                    <div>
+                      <label className="block text-sm font-semibold mb-1.5">Name</label>
+                      <Input 
+                        value={aboutData.name} 
+                        onChange={e => setAboutData({ ...aboutData, name: e.target.value })} 
+                        placeholder="Your full name"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold mb-1.5">Title</label>
+                      <Input 
+                        value={aboutData.title} 
+                        onChange={e => setAboutData({ ...aboutData, title: e.target.value })} 
+                        placeholder="e.g., Professional Mountain Guide"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold mb-1.5">Bio (About Yourself)</label>
+                      <Textarea 
+                        rows={5} 
+                        value={aboutData.bio} 
+                        onChange={e => setAboutData({ ...aboutData, bio: e.target.value })} 
+                        placeholder="Tell your story..."
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold mb-1.5">Profile Image Path (for /about page)</label>
+                      <Input 
+                        value={aboutData.profileImage} 
+                        onChange={e => setAboutData({ ...aboutData, profileImage: e.target.value })} 
+                        placeholder="/profile.jpg"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold mb-1.5">Main Page Image (for homepage animated image)</label>
+                      <Input 
+                        value={aboutData.mainPageImage} 
+                        onChange={e => setAboutData({ ...aboutData, mainPageImage: e.target.value })} 
+                        placeholder="/profile.jpg"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">This image appears in the animated circle on the homepage</p>
+                    </div>
+                  </Card>
+
+                  {/* Statistics */}
+                  <Card className="p-6 space-y-4">
+                    <h3 className="font-semibold text-lg">Statistics</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-semibold mb-1.5">Happy Trekkers</label>
+                        <Input 
+                          type="number" 
+                          value={aboutData.stats.happyTrekkers} 
+                          onChange={e => setAboutData({ 
+                            ...aboutData, 
+                            stats: { ...aboutData.stats, happyTrekkers: parseInt(e.target.value) || 0 }
+                          })} 
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold mb-1.5">Successful Treks</label>
+                        <Input 
+                          type="number" 
+                          value={aboutData.stats.successfulTreks} 
+                          onChange={e => setAboutData({ 
+                            ...aboutData, 
+                            stats: { ...aboutData.stats, successfulTreks: parseInt(e.target.value) || 0 }
+                          })} 
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold mb-1.5">Years of Experience</label>
+                        <Input 
+                          type="number" 
+                          value={aboutData.stats.yearsExperience} 
+                          onChange={e => setAboutData({ 
+                            ...aboutData, 
+                            stats: { ...aboutData.stats, yearsExperience: parseInt(e.target.value) || 0 }
+                          })} 
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold mb-1.5">Routes</label>
+                        <Input 
+                          type="number" 
+                          value={aboutData.stats.routes} 
+                          onChange={e => setAboutData({ 
+                            ...aboutData, 
+                            stats: { ...aboutData.stats, routes: parseInt(e.target.value) || 0 }
+                          })} 
+                        />
+                      </div>
+                    </div>
+                  </Card>
+
+                  {/* Contact Information */}
+                  <Card className="p-6 space-y-4">
+                    <h3 className="font-semibold text-lg">Contact Information</h3>
+                    <div>
+                      <label className="block text-sm font-semibold mb-1.5">Email</label>
+                      <Input 
+                        type="email" 
+                        value={aboutData.email} 
+                        onChange={e => setAboutData({ ...aboutData, email: e.target.value })} 
+                        placeholder="your@email.com"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold mb-1.5">Phone</label>
+                      <Input 
+                        value={aboutData.phone} 
+                        onChange={e => setAboutData({ ...aboutData, phone: e.target.value })} 
+                        placeholder="+977-9841234567"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold mb-1.5">WhatsApp</label>
+                      <Input 
+                        value={aboutData.whatsapp} 
+                        onChange={e => setAboutData({ ...aboutData, whatsapp: e.target.value })} 
+                        placeholder="+977-9841234567"
+                      />
+                    </div>
+                  </Card>
+
+                  {/* Social Links */}
+                  <Card className="p-6 space-y-4">
+                    <h3 className="font-semibold text-lg">Social Media Links</h3>
+                    <div>
+                      <label className="block text-sm font-semibold mb-1.5">Facebook</label>
+                      <Input 
+                        value={aboutData.socialLinks.facebook} 
+                        onChange={e => setAboutData({ 
+                          ...aboutData, 
+                          socialLinks: { ...aboutData.socialLinks, facebook: e.target.value }
+                        })} 
+                        placeholder="https://facebook.com/..."
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold mb-1.5">Instagram</label>
+                      <Input 
+                        value={aboutData.socialLinks.instagram} 
+                        onChange={e => setAboutData({ 
+                          ...aboutData, 
+                          socialLinks: { ...aboutData.socialLinks, instagram: e.target.value }
+                        })} 
+                        placeholder="https://instagram.com/..."
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold mb-1.5">Twitter</label>
+                      <Input 
+                        value={aboutData.socialLinks.twitter} 
+                        onChange={e => setAboutData({ 
+                          ...aboutData, 
+                          socialLinks: { ...aboutData.socialLinks, twitter: e.target.value }
+                        })} 
+                        placeholder="https://twitter.com/..."
+                      />
+                    </div>
+                  </Card>
+
+                  {/* Additional Information */}
+                  <Card className="p-6 space-y-4">
+                    <h3 className="font-semibold text-lg">Additional Information</h3>
+                    <div>
+                      <label className="block text-sm font-semibold mb-1.5">Certifications (comma-separated)</label>
+                      <Textarea 
+                        rows={3} 
+                        value={aboutData.certifications.join(', ')} 
+                        onChange={e => setAboutData({ 
+                          ...aboutData, 
+                          certifications: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
+                        })} 
+                        placeholder="First Aid Certified, Mountain Guide License, etc."
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold mb-1.5">Languages (comma-separated)</label>
+                      <Input 
+                        value={aboutData.languages.join(', ')} 
+                        onChange={e => setAboutData({ 
+                          ...aboutData, 
+                          languages: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
+                        })} 
+                        placeholder="English, Nepali, Hindi, etc."
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold mb-1.5">Specializations (comma-separated)</label>
+                      <Input 
+                        value={aboutData.specializations.join(', ')} 
+                        onChange={e => setAboutData({ 
+                          ...aboutData, 
+                          specializations: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
+                        })} 
+                        placeholder="High Altitude Trekking, Cultural Tours, etc."
+                      />
+                    </div>
+                  </Card>
+
+                  {/* Save Button */}
+                  <Button 
+                    className="w-full gap-2" 
+                    onClick={saveAboutData}
+                    disabled={saving}
+                  >
+                    {saving ? (
+                      <>
+                        <Loader2 className="animate-spin" size={16} />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save size={16} />
+                        Save Changes
+                      </>
+                    )}
+                  </Button>
+                </>
+              )}
             </div>
           )}
 
           {/* Treks */}
           {activeSection === 'treks' && (
             <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold">Treks</h2>
-                <Button size="sm" onClick={() => setNewTrek({})}>+ Add Trek</Button>
-              </div>
-
-              {newTrek !== null && (
-                <Card className="p-5 border-primary/40 bg-primary/5 space-y-3">
-                  <h3 className="font-semibold">New Trek</h3>
-                  {(['id', 'name', 'difficulty', 'days', 'price'] as const).map(field => (
-                    <Input key={field} placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
-                      value={(newTrek as Record<string, string>)[field] ?? ''}
-                      onChange={e => setNewTrek({ ...newTrek, [field]: e.target.value })} />
-                  ))}
-                  <div className="flex gap-2">
-                    <Button className="flex-1" onClick={() => { setTrekData([...trekData, newTrek as TrekItem]); setNewTrek(null) }}>Add</Button>
-                    <Button variant="outline" className="flex-1" onClick={() => setNewTrek(null)}>Cancel</Button>
+              {editingTrekData === null ? (
+                <>
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-2xl font-bold">Treks</h2>
+                    <Button size="sm" onClick={() => setEditingTrekData({} as TrekItem)}>
+                      + Add Trek
+                    </Button>
                   </div>
-                </Card>
-              )}
 
-              <div className="space-y-3">
-                {trekData.map((trek, idx) => (
-                  <Card key={idx} className="p-4">
-                    {editingTrek === idx ? (
-                      <div className="space-y-3">
-                        {(['name', 'difficulty', 'days', 'price'] as const).map(field => (
-                          <Input key={field} placeholder={field} value={trek[field]}
-                            onChange={e => { const u = [...trekData]; u[idx] = { ...u[idx], [field]: e.target.value }; setTrekData(u) }} />
-                        ))}
-                        <div className="flex gap-2">
-                          <Button className="flex-1" onClick={() => setEditingTrek(null)}>Save</Button>
-                          <Button variant="outline" className="flex-1" onClick={() => setEditingTrek(null)}>Cancel</Button>
+                  <div className="space-y-3">
+                    {trekData.map((trek, idx) => (
+                      <Card key={idx} className="p-4">
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-3">
+                            {/* Star button for featuring */}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className={trek.featured ? 'text-green-600 hover:text-green-700' : 'text-muted-foreground hover:text-foreground'}
+                              onClick={() => {
+                                const updated = [...trekData]
+                                updated[idx] = { ...updated[idx], featured: !updated[idx].featured }
+                                setTrekData(updated)
+                                toast({
+                                  title: trek.featured ? 'Removed from Featured' : 'Added to Featured',
+                                  description: trek.featured 
+                                    ? `${trek.name} is no longer featured` 
+                                    : `${trek.name} is now featured on homepage`,
+                                })
+                              }}
+                            >
+                              <Star 
+                                size={20} 
+                                className={trek.featured ? 'fill-green-600' : ''} 
+                              />
+                            </Button>
+                            <div>
+                              <p className="font-semibold">{trek.name}</p>
+                              {trek.subtext && (
+                                <p className="text-xs text-muted-foreground italic">{trek.subtext}</p>
+                              )}
+                              <p className="text-sm text-muted-foreground">
+                                {trek.difficulty} · {trek.days} · {trek.price}
+                                {trek.featured && (
+                                  <span className="ml-2 text-xs text-green-600 font-medium">• Featured</span>
+                                )}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setEditingTrekData(trek)}
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => setTrekData(trekData.filter((_, i) => i !== idx))}
+                            >
+                              Delete
+                            </Button>
+                          </div>
                         </div>
-                      </div>
-                    ) : (
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <p className="font-semibold">{trek.name}</p>
-                          <p className="text-sm text-muted-foreground">{trek.difficulty} · {trek.days} · {trek.price}</p>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm" onClick={() => setEditingTrek(idx)}>Edit</Button>
-                          <Button variant="destructive" size="sm" onClick={() => setTrekData(trekData.filter((_, i) => i !== idx))}>Delete</Button>
-                        </div>
-                      </div>
-                    )}
-                  </Card>
-                ))}
-              </div>
+                      </Card>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <TrekEditor
+                  trek={editingTrekData}
+                  onSave={(updatedTrek) => {
+                    const existingIndex = trekData.findIndex((t) => t.id === updatedTrek.id)
+                    if (existingIndex >= 0) {
+                      // Update existing
+                      const updated = [...trekData]
+                      updated[existingIndex] = updatedTrek
+                      setTrekData(updated)
+                    } else {
+                      // Add new
+                      setTrekData([...trekData, updatedTrek])
+                    }
+                    setEditingTrekData(null)
+                    toast({
+                      title: 'Success',
+                      description: 'Trek saved successfully',
+                    })
+                  }}
+                  onCancel={() => setEditingTrekData(null)}
+                />
+              )}
             </div>
           )}
 
           {/* Gallery */}
           {activeSection === 'gallery' && (
-            <div className="space-y-4">
-              <h2 className="text-2xl font-bold">Gallery</h2>
-              <div className="grid md:grid-cols-2 gap-4">
-                {galleryData.map((item, idx) => (
-                  <Card key={idx} className="overflow-hidden">
-                    <div className="bg-muted h-36 flex items-center justify-center text-muted-foreground">
-                      <ImageIcon size={36} />
-                    </div>
-                    <div className="p-4 space-y-2">
-                      <Input value={item.title} placeholder="Title"
-                        onChange={e => { const u = [...galleryData]; u[idx] = { ...u[idx], title: e.target.value }; setGalleryData(u) }} />
-                      <Input value={item.image} placeholder="Image path" className="text-xs"
-                        onChange={e => { const u = [...galleryData]; u[idx] = { ...u[idx], image: e.target.value }; setGalleryData(u) }} />
-                      <Button variant="destructive" size="sm" className="w-full"
-                        onClick={() => setGalleryData(galleryData.filter((_, i) => i !== idx))}>Delete</Button>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-              <Button variant="outline" className="w-full"
-                onClick={() => setGalleryData([...galleryData, { id: Date.now(), title: 'New Photo', image: '' }])}>
-                + Add Photo
-              </Button>
-            </div>
+            <GalleryManager />
           )}
 
           {/* FAQ */}
