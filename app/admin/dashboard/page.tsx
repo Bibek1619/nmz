@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -14,20 +15,22 @@ import {
 } from '@/components/ui/sidebar'
 import {
   LayoutDashboard, Mountain, Image as ImageIcon, HelpCircle,
-  Phone, Star, User, Home, Save, ArrowLeft, TrendingUp, Loader2,
+  Phone, Star, User, Home, Save, ArrowLeft, TrendingUp, Loader2, Upload, X, MoreHorizontal,
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { TrekEditor } from '@/components/TrekEditor'
 import { GalleryManager } from '@/components/GalleryManager'
+import { BlogEditor } from '@/components/BlogEditor'
+import { motion, AnimatePresence } from 'framer-motion'
 
 const navItems = [
   { id: 'overview', label: 'Overview',     icon: LayoutDashboard },
   { id: 'hero',     label: 'Hero Section', icon: Home            },
   { id: 'about',    label: 'About',        icon: User            },
   { id: 'treks',    label: 'Treks',        icon: Mountain        },
+  { id: 'blog',     label: 'Blog',         icon: TrendingUp      },
   { id: 'gallery',  label: 'Gallery',      icon: ImageIcon       },
   { id: 'faq',      label: 'FAQ',          icon: HelpCircle      },
-  { id: 'contact',  label: 'Contact',      icon: Phone           },
   { id: 'reviews',  label: 'Reviews',      icon: Star            },
 ]
 
@@ -50,12 +53,31 @@ type TrekItem = {
   featured?: boolean;
 }
 type FaqItem  = { id: number; question: string; answer: string }
+type BlogItem = {
+  id: string
+  title: string
+  subtext: string
+  category: string
+  content: string
+  coverImage?: string
+  featured?: boolean
+  published?: boolean
+}
 
 export default function AdminDashboard() {
   const { toast } = useToast()
   const [activeSection, setActiveSection] = useState('overview')
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [showMoreMenu, setShowMoreMenu] = useState(false)
+  
+  // Image upload refs and states
+  const heroImageInputRef = useRef<HTMLInputElement>(null)
+  const profileImageInputRef = useRef<HTMLInputElement>(null)
+  const mainPageImageInputRef = useRef<HTMLInputElement>(null)
+  const [uploadingHeroImage, setUploadingHeroImage] = useState(false)
+  const [uploadingProfileImage, setUploadingProfileImage] = useState(false)
+  const [uploadingMainPageImage, setUploadingMainPageImage] = useState(false)
 
   const [heroData, setHeroData] = useState({
     title:    'Conquer the Himalayas',
@@ -85,16 +107,86 @@ export default function AdminDashboard() {
     },
     certifications: [] as string[],
     languages: [] as string[],
-    specializations: [] as string[],
   })
+
+  // Close more menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => setShowMoreMenu(false)
+    if (showMoreMenu) {
+      document.addEventListener('click', handleClickOutside)
+      return () => document.removeEventListener('click', handleClickOutside)
+    }
+  }, [showMoreMenu])
+
+  const fetchHeroData = async () => {
+    setLoading(true)
+    try {
+      const response = await fetch('/api/admin/hero')
+      if (!response.ok) throw new Error('Failed to fetch hero data')
+      
+      const data = await response.json()
+      if (data) {
+        setHeroData({
+          title: data.title || '',
+          subtitle: data.subtitle || '',
+          image: data.backgroundImage || '',
+        })
+      }
+    } catch (error) {
+      console.error('Error fetching hero data:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to load hero data',
+        variant: 'destructive',
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const saveHeroData = async () => {
+    setSaving(true)
+    try {
+      const response = await fetch('/api/admin/hero', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(heroData),
+      })
+      
+      if (!response.ok) throw new Error('Failed to save hero data')
+      
+      toast({
+        title: 'Success',
+        description: 'Hero section updated successfully',
+      })
+    } catch (error) {
+      console.error('Error saving hero data:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to save hero data',
+        variant: 'destructive',
+      })
+    } finally {
+      setSaving(false)
+    }
+  }
 
   // Fetch about data on mount
   useEffect(() => {
+    if (activeSection === 'hero') {
+      fetchHeroData()
+    }
     if (activeSection === 'about') {
       fetchAboutData()
     }
     if (activeSection === 'treks') {
       fetchTreks()
+    }
+    if (activeSection === 'blog') {
+      fetchBlogs()
+    }
+    if (activeSection === 'reviews') {
+      fetchReviews()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeSection])
@@ -119,6 +211,46 @@ export default function AdminDashboard() {
     }
   }
 
+  const fetchReviews = async () => {
+    setLoadingReviews(true)
+    try {
+      const response = await fetch('/api/admin/reviews')
+      if (!response.ok) throw new Error('Failed to fetch reviews')
+      
+      const data = await response.json()
+      setReviewsData(data)
+    } catch (error) {
+      console.error('Error fetching reviews:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to load reviews',
+        variant: 'destructive',
+      })
+    } finally {
+      setLoadingReviews(false)
+    }
+  }
+
+  const fetchBlogs = async () => {
+    setLoadingBlogs(true)
+    try {
+      const response = await fetch('/api/admin/blog')
+      if (!response.ok) throw new Error('Failed to fetch blogs')
+      
+      const data = await response.json()
+      setBlogData(data)
+    } catch (error) {
+      console.error('Error fetching blogs:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to load blogs',
+        variant: 'destructive',
+      })
+    } finally {
+      setLoadingBlogs(false)
+    }
+  }
+
   const fetchAboutData = async () => {
     setLoading(true)
     try {
@@ -139,7 +271,6 @@ export default function AdminDashboard() {
         socialLinks: data.socialLinks || { facebook: '', instagram: '', twitter: '' },
         certifications: data.certifications || [],
         languages: data.languages || [],
-        specializations: data.specializations || [],
       })
     } catch (error) {
       console.error('Error fetching about data:', error)
@@ -150,6 +281,65 @@ export default function AdminDashboard() {
       })
     } finally {
       setLoading(false)
+    }
+  }
+
+  // Image upload handler
+  const handleImageUpload = async (
+    file: File,
+    folder: string,
+    setUploading: (val: boolean) => void,
+    onSuccess: (url: string) => void
+  ) => {
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: 'Invalid File',
+        description: 'Please select an image file',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: 'File Too Large',
+        description: 'Please select an image smaller than 10MB',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    setUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('folder', folder)
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) throw new Error('Upload failed')
+
+      const data = await response.json()
+      onSuccess(data.url)
+      
+      toast({
+        title: 'Success',
+        description: 'Image uploaded successfully',
+      })
+    } catch (error) {
+      console.error('Upload error:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to upload image',
+        variant: 'destructive',
+      })
+    } finally {
+      setUploading(false)
     }
   }
 
@@ -181,10 +371,76 @@ export default function AdminDashboard() {
     }
   }
 
+  const saveBlog = async (blog: BlogItem) => {
+    setSaving(true)
+    try {
+      const response = await fetch('/api/admin/blog', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(blog),
+      })
+      
+      if (!response.ok) throw new Error('Failed to save blog')
+      
+      toast({
+        title: 'Success',
+        description: 'Blog saved successfully',
+      })
+      
+      setEditingBlogData(null)
+      fetchBlogs()
+    } catch (error) {
+      console.error('Error saving blog:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to save blog',
+        variant: 'destructive',
+      })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const deleteBlog = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this blog?')) return
+    
+    setSaving(true)
+    try {
+      const response = await fetch(`/api/admin/blog?id=${id}`, {
+        method: 'DELETE',
+      })
+      
+      if (!response.ok) throw new Error('Failed to delete blog')
+      
+      toast({
+        title: 'Success',
+        description: 'Blog deleted successfully',
+      })
+      
+      fetchBlogs()
+    } catch (error) {
+      console.error('Error deleting blog:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to delete blog',
+        variant: 'destructive',
+      })
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const [trekData, setTrekData] = useState<TrekItem[]>([])
   const [loadingTreks, setLoadingTreks] = useState(false)
 
   const [editingTrekData, setEditingTrekData] = useState<TrekItem | null>(null)
+
+  const [blogData, setBlogData] = useState<BlogItem[]>([])
+  const [loadingBlogs, setLoadingBlogs] = useState(false)
+  const [editingBlogData, setEditingBlogData] = useState<BlogItem | null>(null)
+
+  const [reviewsData, setReviewsData] = useState<any[]>([])
+  const [loadingReviews, setLoadingReviews] = useState(false)
 
   const [galleryData, setGalleryData] = useState([
     { id: 1, title: 'Mountain Sunrise', image: '/gallery-1.jpg' },
@@ -199,24 +455,16 @@ export default function AdminDashboard() {
     { id: 3, question: 'What about altitude sickness?',  answer: 'We follow proper acclimatization protocols.'      },
   ])
 
-  const [contactData, setContactData] = useState({
-    phone:    '+977-9841234567',
-    whatsapp: '+977-9841234567',
-    email:    'rahul@nmzrahul.com',
-    location: 'Kathmandu, Nepal',
-    address:  'Thamel, Kathmandu',
-  })
-
   const [editingFaq,  setEditingFaq]  = useState<number | null>(null)
   const [newFaq,  setNewFaq]  = useState<Partial<FaqItem>  | null>(null)
 
   const currentNav = navItems.find(n => n.id === activeSection)
 
   return (
-    <div className="flex min-h-screen w-full">
+    <div className="flex min-h-screen w-full flex-col lg:flex-row">
 
-      {/* Sidebar */}
-      <Sidebar collapsible="icon">
+      {/* Sidebar - Desktop (left side) */}
+      <Sidebar collapsible="icon" className="hidden lg:flex">
         <SidebarHeader className="border-b border-sidebar-border">
           <div className="px-2 py-3">
             <span className="text-base font-bold tracking-wide logo-gradient">NMZ RAHUL</span>
@@ -260,17 +508,110 @@ export default function AdminDashboard() {
         </SidebarFooter>
       </Sidebar>
 
+      {/* Top Bar - Mobile/Tablet (Logo) */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border lg:hidden">
+        <div className="h-14 flex items-center px-4">
+          <span className="text-lg font-bold tracking-wide logo-gradient">NMZ RAHUL</span>
+        </div>
+      </div>
+
+      {/* Bottom Navigation - Mobile/Tablet */}
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t border-border lg:hidden">
+        <div className="flex items-center justify-around h-16 px-2 relative">
+          {/* Main nav items */}
+          {navItems.slice(0, 4).map((item) => {
+            const Icon = item.icon
+            const active = activeSection === item.id
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveSection(item.id)}
+                className={`flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors ${
+                  active 
+                    ? 'text-primary' 
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Icon size={20} strokeWidth={active ? 2.5 : 2} />
+                <span className={`text-xs ${active ? 'font-semibold' : 'font-medium'}`}>
+                  {item.label}
+                </span>
+              </button>
+            )
+          })}
+          
+          {/* More Menu Button */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              setShowMoreMenu(!showMoreMenu)
+            }}
+            className={`flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors ${
+              showMoreMenu || navItems.slice(4).some(item => activeSection === item.id)
+                ? 'text-primary' 
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <MoreHorizontal size={20} strokeWidth={showMoreMenu || navItems.slice(4).some(item => activeSection === item.id) ? 2.5 : 2} />
+            <span className={`text-xs ${showMoreMenu || navItems.slice(4).some(item => activeSection === item.id) ? 'font-semibold' : 'font-medium'}`}>
+              More
+            </span>
+          </button>
+
+          {/* More Menu Popup */}
+          <AnimatePresence>
+            {showMoreMenu && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                transition={{ duration: 0.2 }}
+                className="absolute bottom-full right-2 mb-2 bg-background border border-border rounded-lg shadow-lg overflow-hidden min-w-[160px]"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {navItems.slice(4).map((item) => {
+                  const Icon = item.icon
+                  const active = activeSection === item.id
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        setActiveSection(item.id)
+                        setShowMoreMenu(false)
+                      }}
+                      className={`flex items-center gap-3 px-4 py-3 w-full transition-colors ${
+                        active
+                          ? 'bg-primary/10 text-primary'
+                          : 'hover:bg-muted text-foreground'
+                      }`}
+                    >
+                      <Icon size={18} strokeWidth={active ? 2.5 : 2} />
+                      <span className={`text-sm ${active ? 'font-semibold' : 'font-medium'}`}>
+                        {item.label}
+                      </span>
+                    </button>
+                  )
+                })}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </nav>
+
+      {/* Spacers for mobile */}
+      <div className="h-14 lg:hidden" />
+
       {/* Main Area */}
-      <SidebarInset>
-        <header className="flex h-14 items-center gap-3 border-b border-border px-6 bg-background/80 backdrop-blur sticky top-0 z-10">
-          <SidebarTrigger />
-          <Separator orientation="vertical" className="h-5" />
+      <SidebarInset className="flex-1">
+        <header className="flex h-14 items-center gap-3 border-b border-border px-6 bg-background/80 backdrop-blur sticky top-0 z-10 lg:mt-0 mt-14">
+          <SidebarTrigger className="lg:block hidden" />
+          <Separator orientation="vertical" className="h-5 lg:block hidden" />
           <p className="text-sm text-muted-foreground">
             Admin / <span className="text-foreground font-medium">{currentNav?.label}</span>
           </p>
         </header>
 
-        <div className="p-6 max-w-4xl space-y-6">
+        <div className="p-6 max-w-4xl space-y-6 pb-24 lg:pb-6">
 
           {/* Overview */}
           {activeSection === 'overview' && (
@@ -323,11 +664,90 @@ export default function AdminDashboard() {
                   <label className="block text-sm font-semibold mb-1.5">Subtitle</label>
                   <Textarea rows={3} value={heroData.subtitle} onChange={e => setHeroData({ ...heroData, subtitle: e.target.value })} />
                 </div>
+                
+                {/* Hero Image Upload */}
                 <div>
-                  <label className="block text-sm font-semibold mb-1.5">Hero Image Path</label>
-                  <Input value={heroData.image} onChange={e => setHeroData({ ...heroData, image: e.target.value })} />
+                  <label className="block text-sm font-semibold mb-2">Hero Background Image</label>
+                  <input
+                    ref={heroImageInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      if (file) {
+                        handleImageUpload(
+                          file,
+                          'nmz-rahul/hero',
+                          setUploadingHeroImage,
+                          (url) => setHeroData({ ...heroData, image: url })
+                        )
+                      }
+                    }}
+                    className="hidden"
+                  />
+                  
+                  {heroData.image ? (
+                    <div className="relative w-full h-48 rounded-lg overflow-hidden border border-border">
+                      <Image
+                        src={heroData.image}
+                        alt="Hero background"
+                        fill
+                        className="object-cover"
+                      />
+                      <div className="absolute top-2 right-2 flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => heroImageInputRef.current?.click()}
+                          disabled={uploadingHeroImage}
+                        >
+                          {uploadingHeroImage ? <Loader2 className="animate-spin" size={16} /> : <Upload size={16} />}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => setHeroData({ ...heroData, image: '' })}
+                        >
+                          <X size={16} />
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      className="w-full h-32 border-dashed"
+                      onClick={() => heroImageInputRef.current?.click()}
+                      disabled={uploadingHeroImage}
+                    >
+                      {uploadingHeroImage ? (
+                        <Loader2 className="animate-spin" size={24} />
+                      ) : (
+                        <div className="flex flex-col items-center gap-2">
+                          <Upload size={24} />
+                          <span>Click to upload hero image</span>
+                        </div>
+                      )}
+                    </Button>
+                  )}
                 </div>
-                <Button className="w-full gap-2"><Save size={16} />Save Changes</Button>
+                
+                <Button 
+                  className="w-full gap-2"
+                  onClick={saveHeroData}
+                  disabled={saving}
+                >
+                  {saving ? (
+                    <>
+                      <Loader2 className="animate-spin" size={16} />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save size={16} />
+                      Save Changes
+                    </>
+                  )}
+                </Button>
               </Card>
             </div>
           )}
@@ -374,22 +794,137 @@ export default function AdminDashboard() {
                         placeholder="Tell your story..."
                       />
                     </div>
+                    {/* Profile Image Upload */}
                     <div>
-                      <label className="block text-sm font-semibold mb-1.5">Profile Image Path (for /about page)</label>
-                      <Input 
-                        value={aboutData.profileImage} 
-                        onChange={e => setAboutData({ ...aboutData, profileImage: e.target.value })} 
-                        placeholder="/profile.jpg"
+                      <label className="block text-sm font-semibold mb-2">Profile Image (for /about page)</label>
+                      <input
+                        ref={profileImageInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0]
+                          if (file) {
+                            handleImageUpload(
+                              file,
+                              'nmz-rahul/profile',
+                              setUploadingProfileImage,
+                              (url) => setAboutData({ ...aboutData, profileImage: url })
+                            )
+                          }
+                        }}
+                        className="hidden"
                       />
+                      
+                      {aboutData.profileImage ? (
+                        <div className="relative w-full h-48 rounded-lg overflow-hidden border border-border">
+                          <Image
+                            src={aboutData.profileImage}
+                            alt="Profile"
+                            fill
+                            className="object-cover"
+                          />
+                          <div className="absolute top-2 right-2 flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              onClick={() => profileImageInputRef.current?.click()}
+                              disabled={uploadingProfileImage}
+                            >
+                              {uploadingProfileImage ? <Loader2 className="animate-spin" size={16} /> : <Upload size={16} />}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => setAboutData({ ...aboutData, profileImage: '' })}
+                            >
+                              <X size={16} />
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          className="w-full h-32 border-dashed"
+                          onClick={() => profileImageInputRef.current?.click()}
+                          disabled={uploadingProfileImage}
+                        >
+                          {uploadingProfileImage ? (
+                            <Loader2 className="animate-spin" size={24} />
+                          ) : (
+                            <div className="flex flex-col items-center gap-2">
+                              <Upload size={24} />
+                              <span>Click to upload profile image</span>
+                            </div>
+                          )}
+                        </Button>
+                      )}
                     </div>
+                    
+                    {/* Main Page Image Upload */}
                     <div>
-                      <label className="block text-sm font-semibold mb-1.5">Main Page Image (for homepage animated image)</label>
-                      <Input 
-                        value={aboutData.mainPageImage} 
-                        onChange={e => setAboutData({ ...aboutData, mainPageImage: e.target.value })} 
-                        placeholder="/profile.jpg"
+                      <label className="block text-sm font-semibold mb-2">Main Page Image (for homepage animated image)</label>
+                      <input
+                        ref={mainPageImageInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0]
+                          if (file) {
+                            handleImageUpload(
+                              file,
+                              'nmz-rahul/profile',
+                              setUploadingMainPageImage,
+                              (url) => setAboutData({ ...aboutData, mainPageImage: url })
+                            )
+                          }
+                        }}
+                        className="hidden"
                       />
-                      <p className="text-xs text-muted-foreground mt-1">This image appears in the animated circle on the homepage</p>
+                      
+                      {aboutData.mainPageImage ? (
+                        <div className="relative w-full h-48 rounded-lg overflow-hidden border border-border">
+                          <Image
+                            src={aboutData.mainPageImage}
+                            alt="Main page"
+                            fill
+                            className="object-cover"
+                          />
+                          <div className="absolute top-2 right-2 flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              onClick={() => mainPageImageInputRef.current?.click()}
+                              disabled={uploadingMainPageImage}
+                            >
+                              {uploadingMainPageImage ? <Loader2 className="animate-spin" size={16} /> : <Upload size={16} />}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => setAboutData({ ...aboutData, mainPageImage: '' })}
+                            >
+                              <X size={16} />
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          className="w-full h-32 border-dashed"
+                          onClick={() => mainPageImageInputRef.current?.click()}
+                          disabled={uploadingMainPageImage}
+                        >
+                          {uploadingMainPageImage ? (
+                            <Loader2 className="animate-spin" size={24} />
+                          ) : (
+                            <div className="flex flex-col items-center gap-2">
+                              <Upload size={24} />
+                              <span>Click to upload main page image</span>
+                            </div>
+                          )}
+                        </Button>
+                      )}
+                      <p className="text-xs text-muted-foreground mt-2">This image appears in the animated circle on the homepage</p>
                     </div>
                   </Card>
 
@@ -536,17 +1071,6 @@ export default function AdminDashboard() {
                           languages: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
                         })} 
                         placeholder="English, Nepali, Hindi, etc."
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold mb-1.5">Specializations (comma-separated)</label>
-                      <Input 
-                        value={aboutData.specializations.join(', ')} 
-                        onChange={e => setAboutData({ 
-                          ...aboutData, 
-                          specializations: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
-                        })} 
-                        placeholder="High Altitude Trekking, Cultural Tours, etc."
                       />
                     </div>
                   </Card>
@@ -744,6 +1268,124 @@ export default function AdminDashboard() {
             </div>
           )}
 
+          {/* Blog */}
+          {activeSection === 'blog' && (
+            <div className="space-y-4">
+              {editingBlogData === null ? (
+                <>
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-2xl font-bold">Blog Management</h2>
+                    <Button onClick={() => setEditingBlogData({
+                      id: '',
+                      title: '',
+                      subtext: '',
+                      category: '',
+                      content: '',
+                      coverImage: '',
+                      featured: false,
+                      published: false,
+                    })}>
+                      + Add New Blog
+                    </Button>
+                  </div>
+
+                  {loadingBlogs ? (
+                    <Card className="p-12 text-center">
+                      <Loader2 className="animate-spin mx-auto mb-4" size={32} />
+                      <p className="text-muted-foreground">Loading blogs...</p>
+                    </Card>
+                  ) : blogData.length === 0 ? (
+                    <Card className="p-12 text-center">
+                      <TrendingUp size={48} className="mx-auto text-muted-foreground mb-4" />
+                      <p className="text-lg font-semibold mb-2">No blogs yet</p>
+                      <p className="text-muted-foreground mb-4">Create your first blog post to get started</p>
+                      <Button onClick={() => setEditingBlogData({
+                        id: '',
+                        title: '',
+                        subtext: '',
+                        category: '',
+                        content: '',
+                        coverImage: '',
+                        featured: false,
+                        published: false,
+                      })}>
+                        + Add New Blog
+                      </Button>
+                    </Card>
+                  ) : (
+                    <div className="grid md:grid-cols-2 gap-4">
+                      {blogData.map((blog) => (
+                        <Card key={blog.id} className="p-4 flex flex-col gap-3">
+                          {blog.coverImage && (
+                            <div className="relative w-full h-40 rounded-lg overflow-hidden">
+                              <Image
+                                src={blog.coverImage}
+                                alt={blog.title}
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
+                          )}
+                          <div className="flex-1">
+                            <div className="flex items-start justify-between gap-2 mb-2">
+                              <div className="flex-1">
+                                <p className="font-semibold text-lg line-clamp-2">{blog.title}</p>
+                                <p className="text-xs text-muted-foreground mt-1">{blog.category}</p>
+                              </div>
+                              <div className="flex gap-1 flex-wrap">
+                                {blog.featured && (
+                                  <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                    ⭐ Featured
+                                  </span>
+                                )}
+                                {blog.published ? (
+                                  <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                                    Published
+                                  </span>
+                                ) : (
+                                  <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                                    Draft
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            {blog.subtext && (
+                              <p className="text-sm text-muted-foreground line-clamp-2">{blog.subtext}</p>
+                            )}
+                          </div>
+                          <div className="flex gap-2 pt-2 border-t">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="flex-1"
+                              onClick={() => setEditingBlogData(blog)}
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              className="flex-1"
+                              onClick={() => deleteBlog(blog.id)}
+                            >
+                              Delete
+                            </Button>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <BlogEditor
+                  blog={editingBlogData}
+                  onSave={saveBlog}
+                  onCancel={() => setEditingBlogData(null)}
+                />
+              )}
+            </div>
+          )}
+
           {/* Gallery */}
           {activeSection === 'gallery' && (
             <GalleryManager />
@@ -808,61 +1450,184 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {/* Contact */}
-          {activeSection === 'contact' && (
-            <div className="space-y-4">
-              <h2 className="text-2xl font-bold">Contact Info</h2>
-              <Card className="p-6 space-y-4">
-                {([
-                  { label: 'Phone',    key: 'phone'    },
-                  { label: 'WhatsApp', key: 'whatsapp' },
-                  { label: 'Email',    key: 'email'    },
-                  { label: 'Location', key: 'location' },
-                ] as { label: string; key: keyof typeof contactData }[]).map(({ label, key }) => (
-                  <div key={key}>
-                    <label className="block text-sm font-semibold mb-1.5">{label}</label>
-                    <Input value={contactData[key]} onChange={e => setContactData({ ...contactData, [key]: e.target.value })} />
-                  </div>
-                ))}
-                <div>
-                  <label className="block text-sm font-semibold mb-1.5">Full Address</label>
-                  <Textarea rows={3} value={contactData.address}
-                    onChange={e => setContactData({ ...contactData, address: e.target.value })} />
-                </div>
-                <Button className="w-full gap-2"><Save size={16} />Save Changes</Button>
-              </Card>
-            </div>
-          )}
-
           {/* Reviews */}
           {activeSection === 'reviews' && (
             <div className="space-y-4">
-              <h2 className="text-2xl font-bold">Reviews</h2>
-              {[
-                { name: 'Sarah Johnson', location: 'USA',    rating: 5, text: 'Rahul made our Annapurna trek unforgettable. Professional and knowledgeable!' },
-                { name: 'Michael Chen',  location: 'Canada', rating: 5, text: 'Best trekking experience of my life. Safety first!'                          },
-              ].map((r, i) => (
-                <Card key={i} className="p-4">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="font-semibold">{r.name}</p>
-                      <p className="text-xs text-muted-foreground">{r.location}</p>
-                      <div className="flex gap-0.5 mt-1">
-                        {[...Array(r.rating)].map((_, j) => <Star key={j} size={13} className="fill-primary text-primary" />)}
-                      </div>
-                    </div>
-                    <Button variant="destructive" size="sm">Delete</Button>
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-3">{r.text}</p>
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold">Reviews Management</h2>
+                {loadingReviews && <Loader2 className="animate-spin" size={20} />}
+              </div>
+
+              {loadingReviews ? (
+                <Card className="p-12 text-center">
+                  <Loader2 className="animate-spin mx-auto mb-4" size={32} />
+                  <p className="text-muted-foreground">Loading reviews...</p>
                 </Card>
-              ))}
-              <Card className="p-5 space-y-3">
-                <h3 className="font-semibold">Add Review</h3>
-                <Input placeholder="Name" />
-                <Input placeholder="Location" />
-                <Textarea placeholder="Review text" rows={3} />
-                <Button className="w-full">Add Review</Button>
-              </Card>
+              ) : reviewsData.length === 0 ? (
+                <Card className="p-12 text-center">
+                  <Star size={48} className="mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">No reviews yet</p>
+                </Card>
+              ) : (
+                <div className="grid md:grid-cols-2 gap-4">
+                  {reviewsData.map((review) => (
+                    <Card key={review._id?.toString()} className="p-4 md:p-6">
+                      <div className="flex flex-col gap-4">
+                        <div className="flex-1">
+                          <div className="flex flex-wrap items-center gap-2 mb-2">
+                            <p className="font-semibold text-base md:text-lg">{review.fullName}</p>
+                            {!review.approved && (
+                              <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                                Pending
+                              </span>
+                            )}
+                            {review.approved && (
+                              <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                                Approved
+                              </span>
+                            )}
+                            {review.featured && (
+                              <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                ⭐ Featured
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground">{review.address}</p>
+                          <p className="text-sm font-medium text-primary mt-1">{review.trekName}</p>
+                          <div className="flex gap-1 mt-2">
+                            {[...Array(review.rating)].map((_, i) => (
+                              <Star key={i} size={14} className="fill-primary text-primary" />
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <p className="text-sm text-foreground/80 line-clamp-3">&quot;{review.comment}&quot;</p>
+                        
+                        {review.images && review.images.length > 0 && (
+                          <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
+                            {review.images.slice(0, 4).map((img, i) => (
+                              <div key={i} className="relative h-16 md:h-20 rounded overflow-hidden">
+                                <Image
+                                  src={img}
+                                  alt={`Review image ${i + 1}`}
+                                  fill
+                                  className="object-cover"
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        
+                        <div className="flex flex-wrap gap-2 pt-2 border-t">
+                          {!review.approved && (
+                            <Button
+                              size="sm"
+                              className="flex-1 min-w-[100px]"
+                              onClick={async () => {
+                                try {
+                                  const response = await fetch('/api/admin/reviews', {
+                                    method: 'PUT',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ ...review, approved: true }),
+                                  })
+                                  
+                                  if (!response.ok) throw new Error('Failed to approve')
+                                  
+                                  fetchReviews()
+                                  toast({
+                                    title: 'Success',
+                                    description: 'Review approved',
+                                  })
+                                } catch (error) {
+                                  toast({
+                                    title: 'Error',
+                                    description: 'Failed to approve review',
+                                    variant: 'destructive',
+                                  })
+                                }
+                              }}
+                            >
+                              Approve
+                            </Button>
+                          )}
+                          {review.approved && (
+                            <Button
+                              size="sm"
+                              variant={review.featured ? "default" : "outline"}
+                              className="flex-1 min-w-[100px]"
+                              onClick={async () => {
+                                try {
+                                  const response = await fetch('/api/admin/reviews', {
+                                    method: 'PUT',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ ...review, featured: !review.featured }),
+                                  })
+                                  
+                                  if (!response.ok) throw new Error('Failed to toggle featured')
+                                  
+                                  fetchReviews()
+                                  toast({
+                                    title: 'Success',
+                                    description: review.featured ? 'Removed from featured' : 'Added to featured',
+                                  })
+                                } catch (error) {
+                                  toast({
+                                    title: 'Error',
+                                    description: 'Failed to toggle featured',
+                                    variant: 'destructive',
+                                  })
+                                }
+                              }}
+                            >
+                              {review.featured ? '⭐ Featured' : 'Feature'}
+                            </Button>
+                          )}
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            className="flex-1 min-w-[100px]"
+                            onClick={async () => {
+                              if (!confirm('Delete this review?')) return
+                              
+                              try {
+                                const response = await fetch(`/api/admin/reviews?id=${review._id}`, {
+                                  method: 'DELETE',
+                                })
+                                
+                                if (!response.ok) throw new Error('Failed to delete')
+                                
+                                fetchReviews()
+                                toast({
+                                  title: 'Success',
+                                  description: 'Review deleted',
+                                })
+                              } catch (error) {
+                                toast({
+                                  title: 'Error',
+                                  description: 'Failed to delete review',
+                                  variant: 'destructive',
+                                })
+                              }
+                            }}
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                        
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(review.createdAt).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </p>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 

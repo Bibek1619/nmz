@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { useState } from 'react'
 import { X, ImageIcon } from 'lucide-react'
 import { IGallery } from '@/models/Gallery'
+import { Footer } from '@/components/footer'
 
 interface GalleryClientProps {
   images: IGallery[]
@@ -15,23 +16,16 @@ export default function GalleryClient({ images }: GalleryClientProps) {
 
   return (
     <>
-      {/* Hero Section */}
-      <section className="pt-32 pb-12 px-4 text-center bg-gradient-to-b from-primary/5 to-background">
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-5xl font-bold text-primary mb-4"
-        >
-          Trek Photo Gallery
-        </motion.h1>
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="text-xl text-foreground/70 max-w-2xl mx-auto"
-        >
-          Explore stunning moments from our mountain adventures
-        </motion.p>
+      {/* Breadcrumb */}
+      <section className="pt-4 pb-6 px-4 border-b">
+        <div className="max-w-6xl mx-auto">
+          <nav className="text-sm text-muted-foreground mb-6">
+            <a href="/" className="hover:text-foreground">Home</a>
+            <span className="mx-2">/</span>
+            <span className="text-foreground font-medium">Gallery</span>
+          </nav>
+          <h1 className="text-4xl font-bold text-center text-primary bg-gradient-to-br from-primary/10 to-accent/10">Trek Photo Gallery</h1>
+        </div>
       </section>
 
       {/* Gallery Grid */}
@@ -136,12 +130,7 @@ export default function GalleryClient({ images }: GalleryClientProps) {
         )}
       </AnimatePresence>
 
-      {/* Footer */}
-      <footer className="bg-foreground text-white py-12 px-4 mt-20">
-        <div className="max-w-6xl mx-auto text-center text-white/70">
-          <p>&copy; 2024 Trek Adventures with Rahul Thapa. All rights reserved.</p>
-        </div>
-      </footer>
+      <Footer />
     </>
   )
 }

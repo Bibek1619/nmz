@@ -5,3 +5,4 @@ export * from './Trek';
 export * from './Blog';
 export * from './Contact';
 export * from './Gallery';
+export * from './Review';

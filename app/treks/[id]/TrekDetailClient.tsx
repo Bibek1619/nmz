@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/card'
 import { MapPin, Clock, Gauge, AlertCircle, Check, MessageCircle, Mountain } from 'lucide-react'
 import { Navigation } from '@/components/navigation'
 import { ITrek } from '@/models/Trek'
+import { Footer } from '@/components/footer'
 
 interface TrekDetailClientProps {
   trek: ITrek
@@ -18,12 +19,12 @@ export default function TrekDetailClient({ trek }: TrekDetailClientProps) {
       <Navigation />
 
       {/* Hero Section */}
-      <section className="relative h-96 w-full pt-32 overflow-hidden bg-muted">
+      <section className="relative h-96 w-full pt-32 overflow-hidden">
         <Image
           src={trek.image}
           alt={trek.name}
           fill
-          className="object-contain"
+          className="object-cover object-center"
           priority
         />
         <div className="absolute inset-0 bg-black/40"></div>
@@ -208,12 +209,7 @@ export default function TrekDetailClient({ trek }: TrekDetailClientProps) {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-foreground text-white py-12 px-4 mt-20">
-        <div className="max-w-6xl mx-auto text-center text-white/70">
-          <p>&copy; 2024 NMZ RAHUL. All rights reserved.</p>
-        </div>
-      </footer>
+      <Footer />
     </main>
   )
 }

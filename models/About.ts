@@ -30,7 +30,6 @@ export interface IAbout {
   // Certifications & Skills
   certifications?: string[];
   languages?: string[];
-  specializations?: string[];
   
   isActive: boolean;
   createdAt: Date;

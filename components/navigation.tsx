@@ -20,7 +20,6 @@ export function Navigation() {
     { href: '/gallery', label: 'Gallery', icon: ImageIcon },
     { href: '/reviews', label: 'Reviews', icon: Star },
     { href: '/faq', label: 'FAQ', icon: HelpCircle },
-    { href: '/contact', label: 'Contact', icon: Phone },
   ]
 
   // Main navigation items for bottom bar (mobile)
@@ -36,7 +35,6 @@ export function Navigation() {
     { href: '/blog', label: 'Blog', icon: BookOpen },
     { href: '/gallery', label: 'Gallery', icon: ImageIcon },
     { href: '/faq', label: 'FAQ', icon: HelpCircle },
-    { href: '/contact', label: 'Contact', icon: Phone },
   ]
 
   const whatsappNumber = '9779841234567'
@@ -58,7 +56,7 @@ export function Navigation() {
   return (
     <>
       {/* Top Navigation - Desktop */}
-      <nav className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-border lg:block hidden">
+      <nav className="fixed top-0 w-full z-50 bg-white border-b border-border lg:block hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="h-16 flex items-center justify-between">
             {/* Logo */}
@@ -86,7 +84,7 @@ export function Navigation() {
                   href={link.href}
                   className={`px-3 py-2 text-sm font-medium transition-colors rounded-md hover:bg-muted ${
                     isActive(link.href) 
-                      ? 'text-primary bg-muted' 
+                      ? 'text-white bg-green-600' 
                       : 'text-foreground hover:text-primary'
                   }`}
                 >
@@ -99,22 +97,14 @@ export function Navigation() {
               >
                 Admin
               </Link>
-              <a
-                href={whatsappLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="ml-4 flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
-              >
-                <MessageCircle size={18} />
-                <span>WhatsApp</span>
-              </a>
+             
             </motion.div>
           </div>
         </div>
       </nav>
 
       {/* Top Bar - Mobile (Logo + WhatsApp) */}
-      <div className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-border lg:hidden">
+      <div className="fixed top-0 w-full z-50 bg-white border-b border-border lg:hidden">
         <div className="h-14 flex items-center justify-between px-4">
           {/* Logo - Left */}
           <Link href="/" className="text-lg font-bold tracking-wide">
@@ -137,7 +127,7 @@ export function Navigation() {
       </div>
 
       {/* Bottom Navigation - Mobile/Tablet */}
-      <nav className="fixed bottom-0 w-full z-50 bg-background/95 backdrop-blur-md border-t border-border lg:hidden">
+      <nav className="fixed bottom-0 w-full z-50 bg-white border-t border-border lg:hidden">
         <div className="flex items-center justify-around h-16 px-2 relative">
           {bottomNavLinks.map((link) => {
             const Icon = link.icon
@@ -186,7 +176,7 @@ export function Navigation() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
                 transition={{ duration: 0.2 }}
-                className="absolute bottom-full right-2 mb-2 bg-background border border-border rounded-lg shadow-lg overflow-hidden min-w-[160px]"
+                className="absolute bottom-full right-2 mb-2 bg-white border border-border rounded-lg shadow-lg overflow-hidden min-w-[160px]"
                 onClick={(e) => e.stopPropagation()}
               >
                 {moreMenuLinks.map((link) => {

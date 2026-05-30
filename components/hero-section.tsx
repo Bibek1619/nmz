@@ -4,14 +4,24 @@ import { motion } from 'framer-motion'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Mountain } from 'lucide-react'
+import { IHero } from '@/models/Hero'
 
-export function HeroSection() {
+interface HeroSectionProps {
+  heroData: IHero | null
+}
+
+export function HeroSection({ heroData }: HeroSectionProps) {
+  // Default values if no data from database
+  const title = heroData?.title || 'Conquer the Himalayas.'
+  const subtitle = heroData?.subtitle || "I'm Rahul Thapa, a certified mountain guide with 10+ years leading adventurers through Nepal's most breathtaking routes."
+  const backgroundImage = heroData?.backgroundImage || '/herooo.jpg'
+
   return (
     <section className="relative h-[95vh] w-full flex items-center justify-center overflow-hidden pt-16">
       {/* Background Image with Overlay */}
       <div className="absolute inset-0 z-0">
         <Image
-          src="/herooo.jpg"
+          src={backgroundImage}
           alt="Mountain Background"
           fill
           className="object-cover object-center"
@@ -36,12 +46,12 @@ export function HeroSection() {
           </span>
 
           <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold text-white tracking-tight mb-6 leading-tight drop-shadow-2xl">
-            Conquer the <br />
-            <span className="text-orange-400">Himalayas.</span>
+            {title.split(' ').slice(0, -1).join(' ')} <br />
+            <span className="text-orange-400">{title.split(' ').slice(-1)}</span>
           </h1>
 
           <p className="text-lg md:text-xl text-white/90 max-w-2xl mb-10 leading-relaxed drop-shadow-lg">
-            I&apos;m Rahul Thapa, a certified mountain guide with 10+ years leading adventurers through Nepal&apos;s most breathtaking routes.
+            {subtitle}
           </p>
 
           <div className="flex gap-4 flex-wrap justify-center">

@@ -8,7 +8,9 @@ import { Star, Mountain, Users, Trophy } from 'lucide-react'
 import Link from 'next/link'
 import { IAbout } from '@/models'
 import { ITrek } from '@/models/Trek'
+import { IReview } from '@/models/Review'
 import { TrekCard } from '@/components/trek-card'
+import { Footer } from '@/components/footer'
 
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },
@@ -25,9 +27,10 @@ const staggerContainer = {
 interface HomeClientProps {
   aboutData: IAbout | null;
   featuredTreks: ITrek[];
+  featuredReviews: IReview[];
 }
 
-export default function HomeClient({ aboutData, featuredTreks }: HomeClientProps) {
+export default function HomeClient({ aboutData, featuredTreks, featuredReviews }: HomeClientProps) {
   return (
     <>
       {/* About Guide Section */}
@@ -160,22 +163,22 @@ export default function HomeClient({ aboutData, featuredTreks }: HomeClientProps
             variants={staggerContainer}
             initial="initial"
             whileInView="whileInView"
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+            className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6"
           >
             {[
-              { title: 'Expert Local Knowledge', icon: Mountain },
-              { title: 'Safety First Approach', icon: Star },
-              { title: 'Personalized Experience', icon: Users },
-              { title: 'Certified & Licensed', icon: Trophy },
+              { title: 'Expert Local Knowledge', icon: Mountain, bgColor: 'bg-blue-50' },
+              { title: 'Safety First Approach', icon: Star, bgColor: 'bg-green-50' },
+              { title: 'Personalized Experience', icon: Users, bgColor: 'bg-purple-50' },
+              { title: 'Certified & Licensed', icon: Trophy, bgColor: 'bg-orange-50' },
             ].map((item, index) => (
               <motion.div key={index} variants={fadeInUp}>
-                <Card className="p-6 text-center hover:shadow-lg transition-shadow h-full">
-                  <div className="flex justify-center mb-4">
-                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                      <item.icon className="text-primary" size={32} />
+                <Card className={`p-4 md:p-6 text-center hover:shadow-lg transition-shadow h-full ${item.bgColor}`}>
+                  <div className="flex justify-center mb-3 md:mb-4">
+                    <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                      <item.icon className="text-primary" size={24} />
                     </div>
                   </div>
-                  <h3 className="font-bold text-lg text-foreground">{item.title}</h3>
+                  <h3 className="font-bold text-sm md:text-lg text-foreground">{item.title}</h3>
                 </Card>
               </motion.div>
             ))}
@@ -281,41 +284,67 @@ export default function HomeClient({ aboutData, featuredTreks }: HomeClientProps
             whileInView="whileInView"
             className="grid md:grid-cols-3 gap-8"
           >
-            {[
-              {
-                name: 'Sarah Johnson',
-                location: 'USA',
-                comment: 'Rahul made our Annapurna trek unforgettable. Professional, friendly, and incredibly knowledgeable!',
-                rating: 5
-              },
-              {
-                name: 'Michael Chen',
-                location: 'Canada',
-                comment: 'Best trekking experience of my life. The guides really care about safety and your experience.',
-                rating: 5
-              },
-              {
-                name: 'Emma Wilson',
-                location: 'UK',
-                comment: 'Worth every penny. The views, the people, the whole experience was just perfect!',
-                rating: 5
-              }
-            ].map((testimonial, index) => (
-              <motion.div key={index} variants={fadeInUp}>
-                <Card className="p-6 h-full">
-                  <div className="flex gap-1 mb-4">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} size={16} className="fill-primary text-primary" />
-                    ))}
-                  </div>
-                  <p className="text-foreground/80 mb-4 leading-relaxed">&quot;{testimonial.comment}&quot;</p>
-                  <div>
-                    <p className="font-semibold text-foreground">{testimonial.name}</p>
-                    <p className="text-sm text-foreground/60">{testimonial.location}</p>
-                  </div>
-                </Card>
-              </motion.div>
-            ))}
+            {featuredReviews.length > 0 ? (
+              featuredReviews.slice(0, 3).map((review, index) => {
+                const bgColors = ['bg-blue-50', 'bg-green-50', 'bg-purple-50']
+                return (
+                  <motion.div key={review._id?.toString()} variants={fadeInUp}>
+                    <Card className={`p-6 h-full ${bgColors[index % 3]}`}>
+                      <div className="flex gap-1 mb-4">
+                        {[...Array(review.rating)].map((_, i) => (
+                          <Star key={i} size={16} className="fill-orange-400 text-orange-400" />
+                        ))}
+                      </div>
+                      <p className="text-foreground/80 mb-4 leading-relaxed">&quot;{review.comment}&quot;</p>
+                      <div>
+                        <p className="font-semibold text-foreground">{review.fullName}</p>
+                        <p className="text-sm text-foreground/60">{review.address}</p>
+                      </div>
+                    </Card>
+                  </motion.div>
+                )
+              })
+            ) : (
+              // Fallback testimonials if no featured reviews
+              [
+                {
+                  name: 'Sarah Johnson',
+                  location: 'USA',
+                  comment: 'Rahul made our Annapurna trek unforgettable. Professional, friendly, and incredibly knowledgeable!',
+                  rating: 5,
+                  bgColor: 'bg-blue-50'
+                },
+                {
+                  name: 'Michael Chen',
+                  location: 'Canada',
+                  comment: 'Best trekking experience of my life. The guides really care about safety and your experience.',
+                  rating: 5,
+                  bgColor: 'bg-green-50'
+                },
+                {
+                  name: 'Emma Wilson',
+                  location: 'UK',
+                  comment: 'Worth every penny. The views, the people, the whole experience was just perfect!',
+                  rating: 5,
+                  bgColor: 'bg-purple-50'
+                }
+              ].map((testimonial, index) => (
+                <motion.div key={index} variants={fadeInUp}>
+                  <Card className={`p-6 h-full ${testimonial.bgColor}`}>
+                    <div className="flex gap-1 mb-4">
+                      {[...Array(testimonial.rating)].map((_, i) => (
+                        <Star key={i} size={16} className="fill-orange-400 text-orange-400" />
+                      ))}
+                    </div>
+                    <p className="text-foreground/80 mb-4 leading-relaxed">&quot;{testimonial.comment}&quot;</p>
+                    <div>
+                      <p className="font-semibold text-foreground">{testimonial.name}</p>
+                      <p className="text-sm text-foreground/60">{testimonial.location}</p>
+                    </div>
+                  </Card>
+                </motion.div>
+              ))
+            )}
           </motion.div>
         </div>
       </section>
@@ -337,7 +366,7 @@ export default function HomeClient({ aboutData, featuredTreks }: HomeClientProps
             whileTap={{ scale: 0.95 }}
           >
             <Link href="/booking">
-              <Button size="lg" variant="outline" className="border-white text-primary bg-white hover:bg-gray-100 px-8">
+              <Button size="lg" variant="outline" className="border-white text-primary bg-white hover:bg-gray-100 hover:text-primary px-8 font-bold cursor-pointer">
                 Book Your Trek
               </Button>
             </Link>
@@ -345,48 +374,7 @@ export default function HomeClient({ aboutData, featuredTreks }: HomeClientProps
         </motion.div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-foreground text-white py-12 px-4">
-        <div className="max-w-6xl mx-auto grid md:grid-cols-4 gap-8">
-          <div>
-            <h3 className="font-bold mb-4 text-lg">NMZ RAHUL</h3>
-            <p className="text-white/70">Your gateway to unforgettable mountain experiences</p>
-          </div>
-          <div>
-            <h4 className="font-semibold mb-4">Quick Links</h4>
-            <ul className="space-y-2 text-white/70">
-              <li><Link href="/" className="hover:text-white transition">Home</Link></li>
-              <li><Link href="/treks" className="hover:text-white transition">Treks</Link></li>
-              <li><Link href="/reviews" className="hover:text-white transition">Reviews</Link></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="font-semibold mb-4">Contact</h4>
-            <ul className="space-y-2 text-white/70">
-              <li>{aboutData?.phone || '+977-9841234567'}</li>
-              <li>{aboutData?.email || 'rahul@trekadventures.com'}</li>
-              <li>Kathmandu, Nepal</li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="font-semibold mb-4">Follow</h4>
-            <ul className="space-y-2 text-white/70">
-              {aboutData?.socialLinks?.facebook && (
-                <li><a href={aboutData.socialLinks.facebook} target="_blank" rel="noopener noreferrer" className="hover:text-white transition">Facebook</a></li>
-              )}
-              {aboutData?.socialLinks?.instagram && (
-                <li><a href={aboutData.socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="hover:text-white transition">Instagram</a></li>
-              )}
-              {aboutData?.whatsapp && (
-                <li><a href={`https://wa.me/${aboutData.whatsapp.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" className="hover:text-white transition">WhatsApp</a></li>
-              )}
-            </ul>
-          </div>
-        </div>
-        <div className="border-t border-white/20 mt-12 pt-8 text-center text-white/60">
-          <p>&copy; 2024 NMZ RAHUL. All rights reserved.</p>
-        </div>
-      </footer>
+      <Footer />
     </>
   )
 }

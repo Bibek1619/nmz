@@ -25,6 +25,7 @@ type TrekItem = {
   itinerary?: { day: string; title: string; description: string }[]
   included?: string[]
   notIncluded?: string[]
+  featured?: boolean
 }
 
 interface TrekEditorProps {
@@ -60,8 +61,37 @@ export function TrekEditor({ trek, onSave, onCancel }: TrekEditorProps) {
     }
   )
 
+  // Capitalize first letter of each word
+  const capitalizeWords = (text: string) => {
+    return text
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ')
+  }
+
   const updateField = (field: keyof TrekItem, value: any) => {
     setFormData({ ...formData, [field]: value })
+  }
+
+  // Count words in a string
+  const countWords = (text: string) => {
+    return text.trim().split(/\s+/).filter(word => word.length > 0).length
+  }
+
+  // Handle subtext change with 20-word limit
+  const handleSubtextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const text = e.target.value
+    const wordCount = countWords(text)
+    
+    if (wordCount <= 20) {
+      updateField('subtext', text)
+    } else {
+      toast({
+        title: 'Word Limit Exceeded',
+        description: 'Subtext must be 20 words or less',
+        variant: 'destructive',
+      })
+    }
   }
 
   // Handle image file selection and upload
@@ -223,16 +253,18 @@ export function TrekEditor({ trek, onSave, onCancel }: TrekEditorProps) {
             <Input
               placeholder="e.g., Annapurna Base Camp Trek"
               value={formData.name}
-              onChange={(e) => updateField('name', e.target.value)}
+              onChange={(e) => updateField('name', capitalizeWords(e.target.value))}
             />
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Subtext</label>
+          <label className="block text-sm font-medium mb-1">
+            Subtext <span className="text-muted-foreground text-xs">({countWords(formData.subtext || '')}/20 words)</span>
+          </label>
           <Input
-            placeholder="Short tagline below title"
+            placeholder="Short tagline below title (max 20 words)"
             value={formData.subtext || ''}
-            onChange={(e) => updateField('subtext', e.target.value)}
+            onChange={handleSubtextChange}
           />
         </div>
         

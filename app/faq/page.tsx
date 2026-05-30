@@ -6,6 +6,7 @@ import { Navigation } from '@/components/navigation'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ChevronDown } from 'lucide-react'
+import { Footer } from '@/components/footer'
 
 export default function FAQ() {
   const [openIndex, setOpenIndex] = useState<number | null>(null)
@@ -66,31 +67,22 @@ export default function FAQ() {
     <main className="w-full pt-16">
       <Navigation />
 
-      {/* Hero Section */}
-      <section className="py-20 px-4 bg-gradient-to-br from-primary/10 to-accent/10">
-        <div className="max-w-4xl mx-auto text-center">
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-5xl md:text-6xl font-bold text-primary mb-6"
-          >
-            Frequently Asked Questions
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.6 }}
-            className="text-xl text-foreground/80"
-          >
-            Find answers to common questions about our trekking services
-          </motion.p>
+      {/* Breadcrumb */}
+      <section className="pt-4 pb-6 px-4 border-b">
+        <div className="max-w-6xl mx-auto">
+          <nav className="text-sm text-muted-foreground mb-6">
+            <a href="/" className="hover:text-foreground">Home</a>
+            <span className="mx-2">/</span>
+            <span className="text-foreground font-medium">FAQ</span>
+          </nav>
+          <h1 className="text-4xl font-bold text-center text-primary">Frequently Asked Questions</h1>
         </div>
       </section>
 
       {/* FAQ Section */}
-      <section className="py-20 px-4">
+      <section className="py-12 px-4">
         <div className="max-w-4xl mx-auto">
+          <h2 className="text-3xl font-bold text-center text-primary mb-8">Frequently Asked Questions</h2>
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
@@ -154,42 +146,7 @@ export default function FAQ() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-foreground text-primary-foreground py-12 px-4 mt-20">
-        <div className="max-w-6xl mx-auto grid md:grid-cols-4 gap-8">
-          <div>
-            <h3 className="font-bold mb-4 text-lg">Trek Adventures</h3>
-            <p className="opacity-70">Your gateway to unforgettable mountain experiences in Nepal.</p>
-          </div>
-          <div>
-            <h4 className="font-semibold mb-4">Quick Links</h4>
-            <ul className="space-y-2 text-sm opacity-70">
-              <li><a href="/" className="hover:opacity-100 transition">Home</a></li>
-              <li><a href="/services" className="hover:opacity-100 transition">Services</a></li>
-              <li><a href="/contact" className="hover:opacity-100 transition">Contact</a></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="font-semibold mb-4">Contact</h4>
-            <ul className="space-y-2 text-sm opacity-70">
-              <li>+977-984-1234567</li>
-              <li>rahul@trekadventures.com</li>
-              <li>Kathmandu, Nepal</li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="font-semibold mb-4">Follow</h4>
-            <ul className="space-y-2 text-sm opacity-70">
-              <li><a href="#" className="hover:opacity-100 transition">Facebook</a></li>
-              <li><a href="#" className="hover:opacity-100 transition">Instagram</a></li>
-              <li><a href="#" className="hover:opacity-100 transition">WhatsApp</a></li>
-            </ul>
-          </div>
-        </div>
-        <div className="border-t border-primary-foreground/20 mt-12 pt-8 text-center text-sm opacity-60">
-          <p>&copy; 2024 Trek Adventures with Rahul Thapa. All rights reserved.</p>
-        </div>
-      </footer>
+      <Footer />
     </main>
   )
 }
