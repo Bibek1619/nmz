@@ -21,16 +21,19 @@ interface TrekCardProps {
 export function TrekCard({ id, name, subtext, difficulty, days, image, price, description, elevation }: TrekCardProps) {
   return (
     <Card className="overflow-hidden hover:shadow-xl transition-shadow h-full flex flex-col">
-      <div className="relative h-64 w-full overflow-hidden">
+      <div className="relative h-64 w-full overflow-hidden bg-muted">
         <Image
           src={image}
           alt={name}
           fill
-          className="object-cover hover:scale-105 transition-transform duration-300"
+          className="object-contain hover:scale-105 transition-transform duration-300"
         />
       </div>
       <div className="p-6 flex-1 flex flex-col">
         <h3 className="text-xl font-bold text-primary mb-1">{name}</h3>
+        {subtext && (
+          <p className="text-sm text-muted-foreground italic mb-3">{subtext}</p>
+        )}
         <p className="text-foreground/70 mb-4 flex-1">{description}</p>
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div className="flex items-center gap-2">

@@ -93,8 +93,31 @@ export default function AdminDashboard() {
     if (activeSection === 'about') {
       fetchAboutData()
     }
+    if (activeSection === 'treks') {
+      fetchTreks()
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeSection])
+
+  const fetchTreks = async () => {
+    setLoadingTreks(true)
+    try {
+      const response = await fetch('/api/admin/treks')
+      if (!response.ok) throw new Error('Failed to fetch treks')
+      
+      const data = await response.json()
+      setTrekData(data)
+    } catch (error) {
+      console.error('Error fetching treks:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to load treks',
+        variant: 'destructive',
+      })
+    } finally {
+      setLoadingTreks(false)
+    }
+  }
 
   const fetchAboutData = async () => {
     setLoading(true)
@@ -158,42 +181,8 @@ export default function AdminDashboard() {
     }
   }
 
-  const [trekData, setTrekData] = useState<TrekItem[]>([
-    { 
-      id: 'annapurna', 
-      name: 'Annapurna Base Camp', 
-      subtext: 'Surrounded by massive peaks',
-      difficulty: 'Moderate', 
-      days: '7-8 days', 
-      price: '$1,200',
-      image: '/trek-annapurna.jpg',
-      description: 'Trek to the stunning base camp with prayer flags and panoramic views',
-      bestSeason: 'September - November, March - May',
-      height: '4,130 m',
-      distance: '40 km',
-      highlights: ['Prayer flags at base camp', 'Rhododendron forests'],
-      itinerary: [{ day: '1', title: 'Arrival', description: 'Arrive at base' }],
-      included: ['Guide', 'Accommodation'],
-      notIncluded: ['Flights', 'Insurance'],
-      featured: true
-    },
-    { 
-      id: 'mardi', 
-      name: 'Mardi Himal', 
-      difficulty: 'Easy', 
-      days: '5-6 days', 
-      price: '$900',
-      featured: true
-    },
-    { 
-      id: 'everest', 
-      name: 'Everest Base Camp', 
-      difficulty: 'Hard', 
-      days: '14 days', 
-      price: '$2,500',
-      featured: false
-    },
-  ])
+  const [trekData, setTrekData] = useState<TrekItem[]>([])
+  const [loadingTreks, setLoadingTreks] = useState(false)
 
   const [editingTrekData, setEditingTrekData] = useState<TrekItem | null>(null)
 
@@ -597,86 +586,157 @@ export default function AdminDashboard() {
                     </Button>
                   </div>
 
-                  <div className="space-y-3">
-                    {trekData.map((trek, idx) => (
-                      <Card key={idx} className="p-4">
-                        <div className="flex justify-between items-center">
-                          <div className="flex items-center gap-3">
-                            {/* Star button for featuring */}
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className={trek.featured ? 'text-green-600 hover:text-green-700' : 'text-muted-foreground hover:text-foreground'}
-                              onClick={() => {
-                                const updated = [...trekData]
-                                updated[idx] = { ...updated[idx], featured: !updated[idx].featured }
-                                setTrekData(updated)
-                                toast({
-                                  title: trek.featured ? 'Removed from Featured' : 'Added to Featured',
-                                  description: trek.featured 
-                                    ? `${trek.name} is no longer featured` 
-                                    : `${trek.name} is now featured on homepage`,
-                                })
-                              }}
-                            >
-                              <Star 
-                                size={20} 
-                                className={trek.featured ? 'fill-green-600' : ''} 
-                              />
-                            </Button>
-                            <div>
-                              <p className="font-semibold">{trek.name}</p>
-                              {trek.subtext && (
-                                <p className="text-xs text-muted-foreground italic">{trek.subtext}</p>
-                              )}
-                              <p className="text-sm text-muted-foreground">
-                                {trek.difficulty} · {trek.days} · {trek.price}
-                                {trek.featured && (
-                                  <span className="ml-2 text-xs text-green-600 font-medium">• Featured</span>
+                  {loadingTreks ? (
+                    <div className="flex justify-center py-12">
+                      <Loader2 className="animate-spin" size={32} />
+                    </div>
+                  ) : trekData.length === 0 ? (
+                    <Card className="p-12 text-center">
+                      <Mountain size={48} className="mx-auto text-muted-foreground mb-4" />
+                      <p className="text-muted-foreground">No treks added yet</p>
+                      <p className="text-sm text-muted-foreground mt-2">Click "Add Trek" to create your first trek</p>
+                    </Card>
+                  ) : (
+                    <div className="space-y-3">
+                      {trekData.map((trek, idx) => (
+                        <Card key={idx} className="p-4">
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-3">
+                              {/* Star button for featuring */}
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className={trek.featured ? 'text-green-600 hover:text-green-700' : 'text-muted-foreground hover:text-foreground'}
+                                onClick={async () => {
+                                  try {
+                                    const updatedTrek = { ...trek, featured: !trek.featured }
+                                    const response = await fetch('/api/admin/treks', {
+                                      method: 'PUT',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      body: JSON.stringify(updatedTrek),
+                                    })
+                                    
+                                    if (!response.ok) throw new Error('Failed to update')
+                                    
+                                    fetchTreks()
+                                    toast({
+                                      title: trek.featured ? 'Removed from Featured' : 'Added to Featured',
+                                      description: trek.featured 
+                                        ? `${trek.name} is no longer featured` 
+                                        : `${trek.name} is now featured on homepage`,
+                                    })
+                                  } catch (error) {
+                                    toast({
+                                      title: 'Error',
+                                      description: 'Failed to update featured status',
+                                      variant: 'destructive',
+                                    })
+                                  }
+                                }}
+                              >
+                                <Star 
+                                  size={20} 
+                                  className={trek.featured ? 'fill-green-600' : ''} 
+                                />
+                              </Button>
+                              <div>
+                                <p className="font-semibold">{trek.name}</p>
+                                {trek.subtext && (
+                                  <p className="text-xs text-muted-foreground italic">{trek.subtext}</p>
                                 )}
-                              </p>
+                                <p className="text-sm text-muted-foreground">
+                                  {trek.difficulty} · {trek.days} · {trek.price}
+                                  {trek.featured && (
+                                    <span className="ml-2 text-xs text-green-600 font-medium">• Featured</span>
+                                  )}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setEditingTrekData(trek)}
+                              >
+                                Edit
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={async () => {
+                                  if (!confirm('Are you sure you want to delete this trek?')) return
+                                  
+                                  try {
+                                    const response = await fetch(`/api/admin/treks?id=${trek.id}`, {
+                                      method: 'DELETE',
+                                    })
+                                    
+                                    if (!response.ok) throw new Error('Failed to delete')
+                                    
+                                    fetchTreks()
+                                    toast({
+                                      title: 'Success',
+                                      description: 'Trek deleted successfully',
+                                    })
+                                  } catch (error) {
+                                    toast({
+                                      title: 'Error',
+                                      description: 'Failed to delete trek',
+                                      variant: 'destructive',
+                                    })
+                                  }
+                                }}
+                              >
+                                Delete
+                              </Button>
                             </div>
                           </div>
-                          <div className="flex gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setEditingTrekData(trek)}
-                            >
-                              Edit
-                            </Button>
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => setTrekData(trekData.filter((_, i) => i !== idx))}
-                            >
-                              Delete
-                            </Button>
-                          </div>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
                 </>
               ) : (
                 <TrekEditor
                   trek={editingTrekData}
-                  onSave={(updatedTrek) => {
-                    const existingIndex = trekData.findIndex((t) => t.id === updatedTrek.id)
-                    if (existingIndex >= 0) {
-                      // Update existing
-                      const updated = [...trekData]
-                      updated[existingIndex] = updatedTrek
-                      setTrekData(updated)
-                    } else {
-                      // Add new
-                      setTrekData([...trekData, updatedTrek])
+                  onSave={async (updatedTrek) => {
+                    try {
+                      const existingIndex = trekData.findIndex((t) => t.id === updatedTrek.id)
+                      
+                      if (existingIndex >= 0) {
+                        // Update existing trek
+                        const response = await fetch('/api/admin/treks', {
+                          method: 'PUT',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify(updatedTrek),
+                        })
+                        
+                        if (!response.ok) throw new Error('Failed to update trek')
+                      } else {
+                        // Add new trek
+                        const response = await fetch('/api/admin/treks', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify(updatedTrek),
+                        })
+                        
+                        if (!response.ok) throw new Error('Failed to add trek')
+                      }
+                      
+                      setEditingTrekData(null)
+                      fetchTreks() // Refresh the list
+                      toast({
+                        title: 'Success',
+                        description: 'Trek saved successfully',
+                      })
+                    } catch (error) {
+                      console.error('Error saving trek:', error)
+                      toast({
+                        title: 'Error',
+                        description: 'Failed to save trek',
+                        variant: 'destructive',
+                      })
                     }
-                    setEditingTrekData(null)
-                    toast({
-                      title: 'Success',
-                      description: 'Trek saved successfully',
-                    })
                   }}
                   onCancel={() => setEditingTrekData(null)}
                 />

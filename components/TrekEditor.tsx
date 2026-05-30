@@ -1,11 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { X, Plus } from 'lucide-react'
+import { X, Plus, Upload, Loader2 } from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
 
 type TrekItem = {
   id: string
@@ -32,6 +34,11 @@ interface TrekEditorProps {
 }
 
 export function TrekEditor({ trek, onSave, onCancel }: TrekEditorProps) {
+  const { toast } = useToast()
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [uploading, setUploading] = useState(false)
+  const [imagePreview, setImagePreview] = useState<string | null>(trek?.image || null)
+  
   const [formData, setFormData] = useState<TrekItem>(
     trek || {
       id: '',
@@ -55,6 +62,74 @@ export function TrekEditor({ trek, onSave, onCancel }: TrekEditorProps) {
 
   const updateField = (field: keyof TrekItem, value: any) => {
     setFormData({ ...formData, [field]: value })
+  }
+
+  // Handle image file selection and upload
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: 'Invalid File',
+        description: 'Please select an image file',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: 'File Too Large',
+        description: 'Please select an image smaller than 10MB',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    setUploading(true)
+    try {
+      // Upload to Cloudinary
+      const uploadFormData = new FormData()
+      uploadFormData.append('file', file)
+      uploadFormData.append('folder', 'nmz-rahul/treks')
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: uploadFormData,
+      })
+
+      if (!response.ok) throw new Error('Upload failed')
+      const data = await response.json()
+
+      // Update form with Cloudinary URL
+      updateField('image', data.url)
+      setImagePreview(data.url)
+      
+      toast({
+        title: 'Success',
+        description: 'Image uploaded successfully',
+      })
+    } catch (error) {
+      console.error('Upload error:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to upload image',
+        variant: 'destructive',
+      })
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const removeImage = () => {
+    updateField('image', '')
+    setImagePreview(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
   }
 
   // Highlights management
@@ -160,14 +235,64 @@ export function TrekEditor({ trek, onSave, onCancel }: TrekEditorProps) {
             onChange={(e) => updateField('subtext', e.target.value)}
           />
         </div>
+        
+        {/* Image Upload Section */}
         <div>
-          <label className="block text-sm font-medium mb-1">Image Path</label>
-          <Input
-            placeholder="/trek-annapurna.jpg"
-            value={formData.image || ''}
-            onChange={(e) => updateField('image', e.target.value)}
+          <label className="block text-sm font-medium mb-2">Trek Image</label>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            className="hidden"
           />
+          
+          {imagePreview ? (
+            <div className="relative">
+              <div className="relative w-full h-48 rounded-lg overflow-hidden border">
+                <Image
+                  src={imagePreview}
+                  alt="Trek preview"
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              <Button
+                type="button"
+                size="icon"
+                variant="destructive"
+                className="absolute top-2 right-2"
+                onClick={removeImage}
+              >
+                <X size={16} />
+              </Button>
+            </div>
+          ) : (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="w-full"
+            >
+              {uploading ? (
+                <>
+                  <Loader2 className="animate-spin mr-2" size={16} />
+                  Uploading...
+                </>
+              ) : (
+                <>
+                  <Upload size={16} className="mr-2" />
+                  Choose Trek Image
+                </>
+              )}
+            </Button>
+          )}
+          <p className="text-xs text-muted-foreground mt-1">
+            Upload an image from your computer (max 10MB)
+          </p>
         </div>
+        
         <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
           <input
             type="checkbox"
