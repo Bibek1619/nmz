@@ -131,6 +131,40 @@
   }
 }
 
+@layer utilities {
+  .admin-shell {
+    position: relative;
+    isolation: isolate;
+    background:
+      radial-gradient(circle at top right, color-mix(in oklch, var(--primary) 16%, transparent), transparent 32%),
+      radial-gradient(circle at bottom left, color-mix(in oklch, var(--accent) 14%, transparent), transparent 30%),
+      linear-gradient(180deg, color-mix(in oklch, var(--background) 96%, white 4%), var(--background));
+  }
+
+  .admin-shell::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.32) 0%, transparent 35%),
+      radial-gradient(circle at 20% 20%, rgba(163, 230, 53, 0.08), transparent 28%),
+      radial-gradient(circle at 80% 0%, rgba(52, 211, 153, 0.08), transparent 24%);
+    opacity: 0.85;
+  }
+
+  .admin-shell [data-slot='card'] {
+    background: color-mix(in oklch, var(--card) 92%, transparent);
+    border-color: var(--border);
+    box-shadow: 0 18px 40px rgba(15, 23, 20, 0.06);
+    -webkit-backdrop-filter: blur(18px);
+    backdrop-filter: blur(18px);
+  }
+
+  .admin-shell [data-slot='card']:hover {
+    box-shadow: 0 22px 46px rgba(15, 23, 20, 0.08);
+  }
+}
+
 @keyframes gradient-shimmer {
   0%   { background-position: 0% 50%; }
   50%  { background-position: 100% 50%; }

@@ -603,7 +603,7 @@ export default function AdminDashboard() {
 
       {/* Main Area */}
       <SidebarInset className="flex-1">
-        <header className="flex h-14 items-center gap-3 border-b border-border px-6 bg-background/80 backdrop-blur sticky top-0 z-10 lg:mt-0 mt-14">
+        <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-border/60 bg-background/75 px-4 backdrop-blur-xl lg:mt-0 lg:px-6 mt-14">
           <SidebarTrigger className="lg:block hidden" />
           <Separator orientation="vertical" className="h-5 lg:block hidden" />
           <p className="text-sm text-muted-foreground">
@@ -611,7 +611,30 @@ export default function AdminDashboard() {
           </p>
         </header>
 
-        <div className="p-6 max-w-4xl space-y-6 pb-24 lg:pb-6">
+        <div className="p-4 md:p-6 max-w-6xl space-y-6 pb-24 lg:pb-8">
+          <div className="rounded-3xl border border-border/70 bg-background/80 p-5 md:p-6 shadow-sm shadow-black/5 backdrop-blur">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+              <div className="max-w-2xl space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">
+                  Admin Workspace
+                </p>
+                <div>
+                  <h2 className="text-2xl font-bold md:text-3xl">Clean, focused site controls</h2>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    Manage hero content, treks, blogs, gallery items, FAQs, and reviews from one tidy dashboard.
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                <span className="rounded-full border border-border/70 bg-background/70 px-3 py-1.5">
+                  Active: {currentNav?.label}
+                </span>
+                <span className="rounded-full border border-border/70 bg-background/70 px-3 py-1.5">
+                  Responsive admin layout
+                </span>
+              </div>
+            </div>
+          </div>
 
           {/* Overview */}
           {activeSection === 'overview' && (
@@ -672,6 +695,7 @@ export default function AdminDashboard() {
                     ref={heroImageInputRef}
                     type="file"
                     accept="image/*"
+                    title="Upload hero background image"
                     onChange={(e) => {
                       const file = e.target.files?.[0]
                       if (file) {
@@ -801,6 +825,7 @@ export default function AdminDashboard() {
                         ref={profileImageInputRef}
                         type="file"
                         accept="image/*"
+                        title="Upload profile image"
                         onChange={(e) => {
                           const file = e.target.files?.[0]
                           if (file) {
@@ -867,6 +892,7 @@ export default function AdminDashboard() {
                         ref={mainPageImageInputRef}
                         type="file"
                         accept="image/*"
+                        title="Upload main page image"
                         onChange={(e) => {
                           const file = e.target.files?.[0]
                           if (file) {
