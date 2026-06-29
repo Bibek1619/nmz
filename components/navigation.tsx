@@ -15,7 +15,7 @@ export function Navigation() {
   const navLinks = [
     { href: '/', label: 'Home', icon: Home },
     { href: '/about', label: 'About', icon: User },
-    { href: '/treks', label: 'Treks', icon: Mountain },
+    { href: '/treks', label: 'Services', icon: Mountain },
     { href: '/blog', label: 'Blog', icon: BookOpen },
     { href: '/gallery', label: 'Gallery', icon: ImageIcon },
     { href: '/reviews', label: 'Reviews', icon: Star },
@@ -26,7 +26,7 @@ export function Navigation() {
   const bottomNavLinks = [
     { href: '/', label: 'Home', icon: Home },
     { href: '/about', label: 'About', icon: User },
-    { href: '/treks', label: 'Treks', icon: Mountain },
+    { href: '/treks', label: 'Services', icon: Mountain },
     { href: '/reviews', label: 'Reviews', icon: Star },
   ]
 
