@@ -5,6 +5,7 @@ export interface ITrek {
   id: string; // URL-friendly ID (e.g., 'annapurna', 'mardi')
   name: string;
   subtext: string; // Short subtitle/tagline below the title
+  category?: 'trek' | 'tour'; // Category for filtering services
   difficulty: 'Easy' | 'Moderate' | 'Hard' | 'Extreme';
   days: string;
   height: string; // Changed from altitude to match TrekEditor

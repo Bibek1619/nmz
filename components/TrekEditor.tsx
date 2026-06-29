@@ -13,6 +13,7 @@ type TrekItem = {
   id: string
   name: string
   subtext?: string
+  category?: 'trek' | 'tour'
   difficulty: string
   days: string
   price: string
@@ -45,6 +46,7 @@ export function TrekEditor({ trek, onSave, onCancel }: TrekEditorProps) {
       id: '',
       name: '',
       subtext: '',
+      category: 'trek',
       difficulty: 'Moderate',
       days: '',
       price: '',
@@ -257,6 +259,32 @@ export function TrekEditor({ trek, onSave, onCancel }: TrekEditorProps) {
             />
           </div>
         </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">Category *</label>
+            <select
+              className="w-full px-3 py-2 border border-input rounded-md bg-background"
+              value={formData.category || 'trek'}
+              onChange={(e) => updateField('category', e.target.value)}
+            >
+              <option value="trek">Trek</option>
+              <option value="tour">Tour</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Difficulty</label>
+            <select
+              className="w-full px-3 py-2 border border-input rounded-md bg-background"
+              value={formData.difficulty}
+              onChange={(e) => updateField('difficulty', e.target.value)}
+            >
+              <option value="Easy">Easy</option>
+              <option value="Moderate">Moderate</option>
+              <option value="Hard">Hard</option>
+              <option value="Extreme">Extreme</option>
+            </select>
+          </div>
+        </div>
         <div>
           <label className="block text-sm font-medium mb-1">
             Subtext <span className="text-muted-foreground text-xs">({countWords(formData.subtext || '')}/20 words)</span>
@@ -370,19 +398,6 @@ export function TrekEditor({ trek, onSave, onCancel }: TrekEditorProps) {
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Difficulty</label>
-            <select
-              className="w-full px-3 py-2 border border-input rounded-md bg-background"
-              value={formData.difficulty}
-              onChange={(e) => updateField('difficulty', e.target.value)}
-            >
-              <option value="Easy">Easy</option>
-              <option value="Moderate">Moderate</option>
-              <option value="Hard">Hard</option>
-              <option value="Extreme">Extreme</option>
-            </select>
-          </div>
           <div>
             <label className="block text-sm font-medium mb-1">Height</label>
             <Input
