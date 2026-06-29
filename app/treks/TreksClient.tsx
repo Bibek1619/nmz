@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { TrekCard } from '@/components/trek-card'
 import { ITrek } from '@/models/Trek'
@@ -15,7 +16,19 @@ interface TreksClientProps {
   treksData: ITrek[];
 }
 
+type FilterType = 'all' | 'trek' | 'tour'
+
 export default function TreksClient({ treksData }: TreksClientProps) {
+  const [activeFilter, setActiveFilter] = useState<FilterType>('all')
+
+  // Filter treks based on active filter
+  const filteredTreks = treksData.filter((trek) => {
+    if (activeFilter === 'all') return true
+    // Assuming there's a 'type' field in trek data. If not, we can filter by other criteria
+    // For now, using category or a custom field
+    return trek.category?.toLowerCase() === activeFilter
+  })
+
   return (
     <>
       {/* Breadcrumb */}
@@ -24,24 +37,67 @@ export default function TreksClient({ treksData }: TreksClientProps) {
           <nav className="text-sm text-muted-foreground mb-8">
             <a href="/" className="hover:text-foreground">Home</a>
             <span className="mx-2">/</span>
-            <span className="text-foreground font-medium">Treks</span>
+            <span className="text-foreground font-medium">Services</span>
           </nav>
           <h1 className="text-4xl md:text-5xl font-bold text-center text-primary">
-            Our Trek Destinations
+            Our Services
           </h1>
+          <p className="text-center text-muted-foreground mt-3 max-w-2xl mx-auto">
+            Explore our curated collection of treks and tours designed for unforgettable adventures
+          </p>
+        </div>
+      </section>
+
+      {/* Filter Tabs */}
+      <section className="py-6 px-4 bg-muted/30">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex items-center justify-center gap-2 flex-wrap">
+            <button
+              onClick={() => setActiveFilter('all')}
+              className={`px-6 py-2.5 rounded-full font-medium transition-all ${
+                activeFilter === 'all'
+                  ? 'bg-primary text-white shadow-md'
+                  : 'bg-white text-foreground hover:bg-white/80 border border-border'
+              }`}
+            >
+              All
+            </button>
+            <button
+              onClick={() => setActiveFilter('trek')}
+              className={`px-6 py-2.5 rounded-full font-medium transition-all ${
+                activeFilter === 'trek'
+                  ? 'bg-primary text-white shadow-md'
+                  : 'bg-white text-foreground hover:bg-white/80 border border-border'
+              }`}
+            >
+              Trek
+            </button>
+            <button
+              onClick={() => setActiveFilter('tour')}
+              className={`px-6 py-2.5 rounded-full font-medium transition-all ${
+                activeFilter === 'tour'
+                  ? 'bg-primary text-white shadow-md'
+                  : 'bg-white text-foreground hover:bg-white/80 border border-border'
+              }`}
+            >
+              Tour
+            </button>
+          </div>
         </div>
       </section>
 
       {/* Treks Grid */}
       <section className="py-12 px-4">
         <div className="max-w-6xl mx-auto">
-          {treksData.length === 0 ? (
+          {filteredTreks.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-foreground/60 text-lg">No treks available at the moment. Check back soon!</p>
+              <p className="text-foreground/60 text-lg">
+                No {activeFilter !== 'all' ? activeFilter + 's' : 'services'} available at the moment. Check back soon!
+              </p>
             </div>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {treksData.map((trek) => (
+              {filteredTreks.map((trek) => (
                 <motion.div
                   key={trek.id}
                   variants={fadeInUp}
